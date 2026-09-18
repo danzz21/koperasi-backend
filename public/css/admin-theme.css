@@ -1,0 +1,575 @@
+/* ============================================================
+   KOPERASI K-SAMARA — ADMIN THEME (Filament v3 Override)
+   Referensi desain: koperasi 3 fixing (emerald/teal)
+   ============================================================ */
+
+/* ============================================================
+   1. GLOBAL
+   ============================================================ */
+.fi-body { background: #f8fafc !important; }
+.fi-main  { background: #f8fafc !important; padding: 1.5rem !important; }
+
+/* ============================================================
+   2. TOPBAR
+   ============================================================ */
+.fi-topbar-ctn { position: sticky; top: 0; z-index: 40; }
+.fi-topbar {
+    background: #ffffff !important;
+    border-bottom: 1px solid #d1fae5 !important;
+    box-shadow: 0 2px 10px rgba(6,78,59,.06) !important;
+    padding: .75rem 1.5rem !important;
+    position: relative !important;
+}
+
+/* Sembunyikan elemen topbar yang tidak diperlukan */
+.fi-topbar .fi-topbar-start .fi-logo,
+.fi-topbar .fi-topbar-start > a:first-child,
+.fi-topbar .fi-sidebar-open-collapse-sidebar-btn,
+.fi-topbar-close-sidebar-btn,
+.fi-topbar-open-sidebar-btn {
+    display: none !important;
+}
+
+/* ============================================================
+   3. SIDEBAR — dark emerald gradient
+   ============================================================ */
+.fi-sidebar,
+.fi-main-sidebar {
+    background: linear-gradient(180deg,#064e3b 0%,#065f46 52%,#134e4a 100%) !important;
+    border-inline-end: 1px solid rgba(16,185,129,.35) !important;
+    box-shadow: 8px 0 24px rgba(6,78,59,.15) !important;
+}
+
+.fi-sidebar-header {
+    border-bottom: 1px solid rgba(167,243,208,.18) !important;
+    padding: 1rem 1.25rem !important;
+}
+
+.fi-sidebar-item a,
+.fi-sidebar-item button {
+    color: rgba(236,253,245,.78) !important;
+    border-radius: .65rem !important;
+    transition: all .2s ease !important;
+    font-size: .78rem !important;
+}
+.fi-sidebar-item a:hover,
+.fi-sidebar-item button:hover {
+    color: #ffffff !important;
+    background: rgba(16,185,129,.3) !important;
+    transform: translateX(4px) !important;
+}
+.fi-sidebar-item.fi-active > a,
+.fi-sidebar-item.fi-active > button,
+.fi-active.fi-sidebar-item a {
+    color: #ffffff !important;
+    background: linear-gradient(90deg,rgba(5,150,105,.95),rgba(5,150,105,.35)) !important;
+    box-shadow: 0 4px 12px rgba(6,78,59,.25) !important;
+    font-weight: 700 !important;
+}
+
+.fi-sidebar-item .fi-sidebar-item-icon { color: rgba(167,243,208,.7) !important; }
+.fi-sidebar-item.fi-active .fi-sidebar-item-icon,
+.fi-sidebar-item a:hover .fi-sidebar-item-icon { color: #fbbf24 !important; }
+
+.fi-sidebar-group-label {
+    color: rgba(167,243,208,.75) !important;
+    text-transform: uppercase !important;
+    letter-spacing: .08em !important;
+    font-size: .62rem !important;
+    font-weight: 800 !important;
+}
+
+.fi-sidebar-footer {
+    margin: .5rem !important;
+    border-radius: .75rem !important;
+    background: rgba(6,78,59,.4) !important;
+    border: 1px solid rgba(16,185,129,.2) !important;
+}
+
+/* ============================================================
+   4. PAGE HEADER
+   ============================================================ */
+.fi-page-header {
+    margin-bottom: 1.5rem !important;
+}
+
+/* Heading & subheading */
+.fi-header-heading {
+    color: #064e3b !important;
+    font-weight: 800 !important;
+    font-size: 1.5rem !important;
+    letter-spacing: -.02em !important;
+}
+.fi-header-subheading {
+    color: #6b7280 !important;
+    font-size: .85rem !important;
+    margin-top: .25rem !important;
+}
+
+/* Header action buttons — emerald */
+.fi-page-header .fi-btn-color-primary,
+.fi-header-actions .fi-btn-color-primary {
+    background: #059669 !important;
+    border-color: #047857 !important;
+    color: #ffffff !important;
+    font-weight: 700 !important;
+    border-radius: .65rem !important;
+    box-shadow: 0 4px 10px rgba(5,150,105,.25) !important;
+    transition: all .2s ease !important;
+}
+.fi-page-header .fi-btn-color-primary:hover,
+.fi-header-actions .fi-btn-color-primary:hover {
+    background: #047857 !important;
+    box-shadow: 0 6px 16px rgba(5,150,105,.35) !important;
+    transform: translateY(-1px) !important;
+}
+
+/* Sembunyikan breadcrumb bawaan */
+.fi-breadcrumbs { display: none !important; }
+
+/* ============================================================
+   5. TABLE — emerald header & hover
+   ============================================================ */
+
+/* Table container */
+.fi-ta-ctn {
+    border-radius: 1rem !important;
+    overflow: hidden !important;
+    border: 1px solid #d1fae5 !important;
+    box-shadow: 0 4px 12px rgba(6,78,59,.06) !important;
+}
+
+/* Table header wrapper */
+.fi-ta-header {
+    background: #065f46 !important;
+    border-bottom: 2px solid #047857 !important;
+    padding: .85rem 1.25rem !important;
+}
+
+/* Table header cells */
+.fi-ta-header-cell {
+    background: #065f46 !important;
+    color: #ffffff !important;
+    font-weight: 700 !important;
+    font-size: .72rem !important;
+    letter-spacing: .07em !important;
+    text-transform: uppercase !important;
+    padding: .75rem 1rem !important;
+    white-space: nowrap !important;
+}
+.fi-ta-header-cell:first-child { border-radius: 0 !important; }
+.fi-ta-header-cell .fi-ta-col-header-sort-btn { color: #a7f3d0 !important; }
+.fi-ta-header-cell .fi-ta-col-header-sort-btn:hover { color: #ffffff !important; }
+
+/* Sort icon */
+.fi-ta-header-cell [data-sort] svg,
+.fi-ta-header-cell svg { color: rgba(167,243,208,.8) !important; }
+
+/* Table rows */
+.fi-ta-row td {
+    padding: .75rem 1rem !important;
+    font-size: .82rem !important;
+    color: #374151 !important;
+    border-bottom: 1px solid #f3f4f6 !important;
+    transition: background .15s ease !important;
+}
+
+.fi-ta-row:hover td {
+    background: #f0fdf4 !important;
+}
+
+.fi-ta-row:last-child td { border-bottom: none !important; }
+
+/* Table empty state */
+.fi-ta-empty-state-heading { color: #064e3b !important; font-weight: 700 !important; }
+.fi-ta-empty-state-description { color: #6b7280 !important; }
+
+/* ============================================================
+   6. TABLE TOOLBAR (search, filters, etc.)
+   ============================================================ */
+.fi-ta-header-toolbar {
+    background: #f0fdf4 !important;
+    border-bottom: 1px solid #d1fae5 !important;
+    padding: .85rem 1.25rem !important;
+}
+
+/* Search input */
+.fi-ta-search input,
+.fi-global-search input,
+.fi-ta-filters-search input {
+    border: 1px solid #d1fae5 !important;
+    border-radius: .65rem !important;
+    font-size: .8rem !important;
+    transition: all .2s ease !important;
+}
+.fi-ta-search input:focus,
+.fi-global-search input:focus {
+    border-color: #059669 !important;
+    box-shadow: 0 0 0 3px rgba(5,150,105,.15) !important;
+    outline: none !important;
+}
+
+/* Filter bar */
+.fi-ta-filters {
+    background: #f9fafb !important;
+    border-bottom: 1px solid #e5e7eb !important;
+    padding: .75rem 1.25rem !important;
+}
+.fi-ta-filters select,
+.fi-ta-filters input {
+    border: 1px solid #d1d5db !important;
+    border-radius: .6rem !important;
+    font-size: .8rem !important;
+}
+.fi-ta-filters select:focus,
+.fi-ta-filters input:focus {
+    border-color: #059669 !important;
+    box-shadow: 0 0 0 3px rgba(5,150,105,.12) !important;
+}
+
+/* ============================================================
+   7. BADGES — colored status
+   ============================================================ */
+
+/* Base badge */
+.fi-badge {
+    border-radius: 9999px !important;
+    font-size: .7rem !important;
+    font-weight: 700 !important;
+    padding: .25rem .75rem !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: .25rem !important;
+    border: 1px solid transparent !important;
+}
+
+/* success / aktif / terbayar / lunas */
+.fi-badge-color-success,
+.fi-color-success.fi-badge {
+    background-color: #dcfce7 !important;
+    color: #15803d !important;
+    border-color: #86efac !important;
+}
+
+/* warning / pending / belumbayar */
+.fi-badge-color-warning,
+.fi-color-warning.fi-badge {
+    background-color: #fef9c3 !important;
+    color: #a16207 !important;
+    border-color: #fde047 !important;
+}
+
+/* danger / ditolak / nonaktif / denda / gagal */
+.fi-badge-color-danger,
+.fi-color-danger.fi-badge {
+    background-color: #fee2e2 !important;
+    color: #b91c1c !important;
+    border-color: #fca5a5 !important;
+}
+
+/* gray / lunas (pinjaman) */
+.fi-badge-color-gray,
+.fi-color-gray.fi-badge {
+    background-color: #f3f4f6 !important;
+    color: #374151 !important;
+    border-color: #d1d5db !important;
+}
+
+/* primary / info */
+.fi-badge-color-primary,
+.fi-color-primary.fi-badge {
+    background-color: #d1fae5 !important;
+    color: #065f46 !important;
+    border-color: #6ee7b7 !important;
+}
+
+/* info (blue) */
+.fi-badge-color-info,
+.fi-color-info.fi-badge {
+    background-color: #dbeafe !important;
+    color: #1e40af !important;
+    border-color: #93c5fd !important;
+}
+
+/* ============================================================
+   8. GLOBAL BUTTONS
+   ============================================================ */
+.fi-btn-color-primary {
+    background: #059669 !important;
+    border-color: #047857 !important;
+    color: #ffffff !important;
+    font-weight: 700 !important;
+    border-radius: .65rem !important;
+    box-shadow: 0 4px 10px rgba(5,150,105,.2) !important;
+    transition: all .2s ease !important;
+}
+.fi-btn-color-primary:hover {
+    background: #047857 !important;
+    box-shadow: 0 6px 16px rgba(5,150,105,.3) !important;
+    transform: translateY(-1px) !important;
+}
+
+.fi-btn-color-gray {
+    border-radius: .65rem !important;
+    transition: all .2s ease !important;
+}
+
+/* Danger button */
+.fi-btn-color-danger {
+    border-radius: .65rem !important;
+}
+
+/* ============================================================
+   9. SECTIONS / CARDS
+   ============================================================ */
+.fi-section {
+    border-color: #d1fae5 !important;
+    border-radius: 1rem !important;
+    box-shadow: 0 4px 12px rgba(6,78,59,.04) !important;
+}
+
+.fi-section-header {
+    background: #f0fdf4 !important;
+    border-bottom: 1px solid #d1fae5 !important;
+    border-radius: 1rem 1rem 0 0 !important;
+    padding: .9rem 1.25rem !important;
+}
+
+.fi-section-header-heading {
+    color: #064e3b !important;
+    font-weight: 700 !important;
+    font-size: .88rem !important;
+}
+
+/* ============================================================
+   10. STAT/WIDGET CARDS
+   ============================================================ */
+.fi-wi-stats-overview-stat {
+    border-radius: 1rem !important;
+    border: 1px solid #d1fae5 !important;
+    box-shadow: 0 4px 12px rgba(6,78,59,.05) !important;
+    transition: all .3s ease !important;
+    overflow: hidden !important;
+}
+.fi-wi-stats-overview-stat:hover {
+    transform: translateY(-4px) !important;
+    box-shadow: 0 12px 24px rgba(6,78,59,.1) !important;
+}
+
+.fi-wi-stats-overview-stat-value {
+    color: #064e3b !important;
+    font-weight: 800 !important;
+}
+
+.fi-wi-stats-overview-stat-description {
+    color: #6b7280 !important;
+}
+
+/* ============================================================
+   11. WIDGET WRAPPER
+   ============================================================ */
+.fi-wi-custom .fi-wi-custom-content { padding: 0 !important; }
+.fi-wi-custom { padding: 0 !important; }
+[class*="fi-wi"] > div { padding: 0 !important; }
+.fi-page-content { padding: 1.25rem !important; }
+.fi-widgets { display: block !important; }
+.fi-widgets > * { display: block !important; width: 100% !important; }
+
+/* ============================================================
+   12. FORMS
+   ============================================================ */
+.fi-input {
+    border-radius: .65rem !important;
+    border-color: #d1d5db !important;
+    font-size: .875rem !important;
+    transition: all .2s ease !important;
+}
+.fi-input:focus {
+    border-color: #059669 !important;
+    box-shadow: 0 0 0 3px rgba(5,150,105,.15) !important;
+}
+.fi-input-wrapper:focus-within {
+    border-color: #059669 !important;
+    box-shadow: 0 0 0 3px rgba(5,150,105,.1) !important;
+}
+.fi-fo-field-wrp-label {
+    color: #374151 !important;
+    font-weight: 600 !important;
+    font-size: .8rem !important;
+}
+
+/* ============================================================
+   13. PAGINATION
+   ============================================================ */
+.fi-pagination-item a,
+.fi-pagination-item button {
+    border-radius: .5rem !important;
+    transition: all .2s ease !important;
+}
+.fi-pagination-item.fi-active a,
+.fi-pagination-item.fi-active button {
+    background: #059669 !important;
+    color: #ffffff !important;
+    border-color: #047857 !important;
+}
+.fi-pagination-item a:hover,
+.fi-pagination-item button:hover {
+    background: #f0fdf4 !important;
+    border-color: #6ee7b7 !important;
+    color: #065f46 !important;
+}
+
+/* ============================================================
+   14. MODAL / DIALOG
+   ============================================================ */
+.fi-modal-window {
+    border-radius: 1.25rem !important;
+    box-shadow: 0 25px 60px rgba(0,0,0,.2) !important;
+}
+.fi-modal-header {
+    background: linear-gradient(115deg, #064e3b, #047857) !important;
+    border-radius: 1.25rem 1.25rem 0 0 !important;
+    padding: 1rem 1.5rem !important;
+}
+.fi-modal-header-heading {
+    color: #ffffff !important;
+    font-weight: 700 !important;
+}
+
+/* ============================================================
+   15. NOTIFICATION TOASTS
+   ============================================================ */
+.fi-notifications .fi-no-notification {
+    border-radius: 1rem !important;
+    box-shadow: 0 8px 24px rgba(0,0,0,.12) !important;
+}
+
+/* ============================================================
+   16. CUSTOM HERO WIDGET (dashboard)
+   ============================================================ */
+.ks-admin-hero {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 140px;
+    padding: 1.75rem 2rem;
+    color: #ffffff;
+    border-radius: 1rem;
+    background: linear-gradient(115deg,#064e3b 0%,#047857 56%,#0f766e 100%);
+    box-shadow: 0 12px 28px rgba(6,78,59,.18);
+}
+.ks-admin-eyebrow {
+    margin: 0 0 .4rem;
+    color: #a7f3d0;
+    font-size: .68rem;
+    font-weight: 800;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+}
+.ks-admin-hero h2 { margin: 0; font-size: 1.7rem; font-weight: 800; }
+.ks-admin-subtitle { margin: .4rem 0 0; color: rgba(236,253,245,.82); font-size: .88rem; }
+.ks-admin-hero-icon {
+    width: 4.5rem; height: 4.5rem;
+    display: grid; place-items: center;
+    color: #fbbf24;
+    border: 1px solid rgba(255,255,255,.25);
+    border-radius: 1.2rem;
+    background: rgba(255,255,255,.12);
+}
+.ks-admin-hero-icon svg { width: 2.5rem; height: 2.5rem; }
+
+/* ============================================================
+   17. STAT CARDS (custom widget)
+   ============================================================ */
+.ks-stat-card {
+    transition: all .3s ease !important;
+    cursor: default;
+}
+.ks-stat-card:hover {
+    transform: translateY(-4px) !important;
+    box-shadow: 0 12px 24px rgba(0,0,0,.1) !important;
+}
+
+/* ============================================================
+   18. PULSE ANIMATION
+   ============================================================ */
+@keyframes ping {
+    75%, 100% { transform: scale(2); opacity: 0; }
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: .7; }
+}
+
+/* ============================================================
+   19. TABLE RECORD ACTIONS (edit/delete icons)
+   ============================================================ */
+.fi-ta-row-actions .fi-btn {
+    border-radius: .5rem !important;
+    transition: all .2s ease !important;
+}
+.fi-ta-row-actions .fi-btn:hover {
+    transform: scale(1.1) !important;
+}
+
+/* ============================================================
+   20. SELECT / DROPDOWN
+   ============================================================ */
+.fi-select-option.fi-active {
+    background: #d1fae5 !important;
+    color: #065f46 !important;
+}
+.fi-select-option:hover {
+    background: #ecfdf5 !important;
+}
+
+/* ============================================================
+   21. TABLE BULK ACTIONS
+   ============================================================ */
+.fi-ta-selection-indicator {
+    background: #d1fae5 !important;
+    color: #065f46 !important;
+    border-radius: .65rem !important;
+    border: 1px solid #6ee7b7 !important;
+}
+
+/* ============================================================
+   22. TOGGLE COLUMNS BUTTON
+   ============================================================ */
+.fi-ta-col-toggle-btn { border-radius: .65rem !important; }
+
+/* ============================================================
+   23. RESPONSIVE TABLE
+   ============================================================ */
+@media (max-width: 768px) {
+    .fi-ta-header-cell { font-size: .65rem !important; padding: .6rem .75rem !important; }
+    .fi-ta-row td { padding: .6rem .75rem !important; font-size: .78rem !important; }
+    .fi-header-heading { font-size: 1.2rem !important; }
+}
+
+.ks-report-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+.ks-report-header h1 { margin: 0; font-size: 1.5rem; font-weight: 800; }
+.ks-report-header p { margin: .2rem 0 0; color: #6b7479; font-size: .75rem; }
+.ks-report-select { border: 1px solid #dce1e3; border-radius: .5rem; padding: .5rem .75rem; background: #fff; font-size: .75rem; }
+.ks-report-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .75rem; }
+.ks-report-card { padding: 1rem; border-radius: .75rem; color: #fff; box-shadow: 0 8px 18px rgba(20, 35, 40, .1); }
+.ks-report-card span, .ks-report-card small { display: block; opacity: .85; font-size: .65rem; }
+.ks-report-card strong { display: block; margin: .55rem 0; font-size: 1.25rem; }
+.ks-report-emerald { background: linear-gradient(135deg, #047857, #0f766e); }
+.ks-report-blue { background: linear-gradient(135deg, #2563eb, #1d4ed8); }
+.ks-report-purple { background: linear-gradient(135deg, #7c3aed, #6d28d9); }
+.ks-report-amber { background: linear-gradient(135deg, #d97706, #b45309); }
+.ks-report-chart { margin-top: .75rem; padding: 1rem; border: 1px solid #dce1e3; border-radius: .75rem; background: #fff; }
+.ks-report-chart h2 { margin: 0 0 1rem; font-size: .85rem; font-weight: 800; }
+.ks-report-bars { display: flex; align-items: flex-end; justify-content: space-around; height: 240px; border-bottom: 1px solid #dce1e3; }
+.ks-report-month { display: flex; flex-direction: column; align-items: center; gap: .4rem; height: 100%; justify-content: flex-end; }
+.ks-report-bar-wrap { height: 200px; display: flex; align-items: flex-end; gap: 3px; }
+.ks-report-bar-wrap i, .ks-report-bar-wrap b { display: block; width: 10px; min-height: 2px; border-radius: 4px 4px 0 0; }
+.ks-report-bar-wrap i { background: #059669; }
+.ks-report-bar-wrap b { background: #ef4444; }
+.ks-report-month small { color: #79848a; font-size: .58rem; }
+.ks-report-legend { margin-top: .75rem; color: #69757a; font-size: .65rem; }
+.ks-report-in, .ks-report-out { display: inline-block; width: 12px; height: 3px; margin: 0 .3rem 2px .75rem; background: #059669; }
+.ks-report-out { background: #ef4444; }
+@media (max-width: 800px) { .ks-report-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
