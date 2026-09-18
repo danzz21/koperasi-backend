@@ -177,7 +177,9 @@ class PpobController extends Controller
             return response()->json(['message' => 'Transaksi tidak ditemukan.'], 404);
         }
 
-        $transaksi = DB::table('ppob_transaksi')->find($payment->ref_id);
+        $transaksi = DB::table('ppob_transaksi')
+            ->where('id_transaksi', $payment->ref_id)
+            ->first();
 
         return response()->json(['payment' => $payment, 'transaksi' => $transaksi]);
     }
