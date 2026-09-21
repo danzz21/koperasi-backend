@@ -42,7 +42,16 @@ class AdminPanelProvider extends PanelProvider
                 Dashboard::class,
                 \App\Filament\Pages\LaporanAnalisis::class,
             ])
-            ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
+            ->resources([
+                \App\Filament\Resources\Users\UserResource::class,
+                \App\Filament\Resources\Simpanans\SimpananResource::class,
+                \App\Filament\Resources\Pinjamen\PinjamanResource::class,
+                \App\Filament\Resources\Cicilans\CicilanResource::class,
+                \App\Filament\Resources\Pembayarans\PembayaranResource::class,
+                \App\Filament\Resources\Transaksis\TransaksiResource::class,
+                \App\Filament\Resources\PpobTransaksis\PpobTransaksiResource::class,
+                \App\Filament\Resources\Akads\AkadResource::class,
+            ])
             ->widgets([])
             ->middleware([
                 EncryptCookies::class,

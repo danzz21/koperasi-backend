@@ -120,5 +120,19 @@ class DatabaseSeeder extends Seeder
                 $akad
             );
         }
+
+        // Superadmin default
+        User::updateOrCreate(
+            ['username' => 'superadmin'],
+            [
+                'email'        => 'superadmin@koperasi.local',
+                'password'     => Hash::make('superadmin123'),
+                'nama_lengkap' => 'Superadmin',
+                'nomor_ktp'    => '9999999999999999',
+                'nomor_hp'     => '089999999999',
+                'role'         => 'superadmin',
+                'status'       => 'aktif',
+            ]
+        );
     }
 }

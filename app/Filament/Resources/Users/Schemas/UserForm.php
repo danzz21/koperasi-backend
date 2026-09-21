@@ -57,9 +57,12 @@ class UserForm
                     ->default(null)
                     ->maxLength(255),
                 Select::make('role')
-                    ->options(['admin' => 'Admin', 'anggota' => 'Anggota'])
+                    ->options(['anggota' => 'Anggota'])
                     ->default('anggota')
-                    ->required(),
+                    ->disabled()
+                    ->dehydrated()
+                    ->required()
+                    ->helperText('Role hanya dapat diubah oleh Superadmin.'),
                 Select::make('status')
                     ->options(['pending' => 'Pending', 'aktif' => 'Aktif', 'nonaktif' => 'Nonaktif'])
                     ->default('pending')

@@ -16,6 +16,12 @@ use App\Http\Controllers\Api\Admin\AdminPinjamanController;
 use App\Http\Controllers\Api\Admin\AdminSimpananController;
 use App\Http\Controllers\Api\Admin\AdminPpobController;
 use App\Http\Controllers\Api\Admin\AdminPaymentController;
+use App\Http\Controllers\Api\Auth\GoogleAuthController;
+use App\Http\Controllers\Api\Auth\PasskeyAuthController;
+use App\Http\Controllers\Api\Superadmin\UserController as SuperadminUserController;
+use App\Http\Controllers\Api\Superadmin\AuditLogController as SuperadminAuditLogController;
+use App\Http\Controllers\Api\Superadmin\FinancialReportController as SuperadminFinancialReportController;
+use App\Http\Controllers\Api\Superadmin\SystemConfigController as SuperadminSystemConfigController;
 
 /*
 |--------------------------------------------------------------------------
@@ -28,6 +34,15 @@ Route::prefix('auth')->group(function () {
     Route::post('login',           [AuthController::class, 'login']);
     Route::post('register',        [AuthController::class, 'register']);
     Route::post('forgot-password', [AuthController::class, 'forgotPassword']);
+
+    // ── Google Login ──────────────────────────────────────────────────────
+    Route::post('google', [GoogleAuthController::class, 'loginWithGoogle']);
+
+    // ── Passkey (Biometrik) ───────────────────────────────────────────────
+    Route::prefix('passkey')->group(function () {
+        Route::post('login/options',     [PasskeyAuthController::class, 'loginOptions']);
+        Route::post('login/verify',      [PasskeyAuthController::class, 'loginVerify']);
+    });
 });
 
 // ── Authenticated Routes ────────────────────────────────────────────────────
@@ -35,6 +50,14 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
     Route::post('auth/logout', [AuthController::class, 'logout']);
     Route::get('auth/me',      [AuthController::class, 'me']);
+
+    // ── Passkey: registrasi perangkat (wajib login) & kelola perangkat ───────
+    Route::prefix('auth/passkey')->group(function () {
+        Route::get('/',                 [PasskeyAuthController::class, 'index']);
+        Route::delete('{id}',           [PasskeyAuthController::class, 'destroy']);
+        Route::post('register/options', [PasskeyAuthController::class, 'registerOptions']);
+        Route::post('register/verify',  [PasskeyAuthController::class, 'registerVerify']);
+    });
 
     // ── ANGGOTA ─────────────────────────────────────────────────────────────
     Route::middleware('role:anggota')->prefix('anggota')->group(function () {
@@ -152,5 +175,46 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
         // Payment Gateway Admin
         Route::get('payment-gateway',       [AdminPaymentController::class, 'index']);
+    });
+
+    // ── SUPERADMIN ───────────────────────────────────────────────────────────
+    // Hanya role superadmin: manajemen user & role, konfigurasi sistem,
+    // audit trail, dan laporan keuangan menyeluruh.
+    Route::middleware('role:superadmin')->prefix('superadmin')->group(function () {
+
+        // Dashboard & ringkasan sistem
+        Route::get('ringkasan', [SuperadminFinancialReportController::class, 'index']);
+
+        // ── Manajemen User & Role ───────────────────────────────────────────
+        Route::prefix('users')->group(function () {
+            Route::get('/',          [SuperadminUserController::class, 'index']);
+            Route::post('/',         [SuperadminUserController::class, 'store']);
+            Route::get('{id}',       [SuperadminUserController::class, 'show']);
+            Route::put('{id}',       [SuperadminUserController::class, 'update']);
+            Route::put('{id}/role',  [SuperadminUserController::class, 'updateRole']);
+            Route::delete('{id}',    [SuperadminUserController::class, 'destroy']);
+        });
+
+        // ── Audit Trail / Log Aktivitas ─────────────────────────────────────
+        Route::prefix('audit-log')->group(function () {
+            Route::get('/',          [SuperadminAuditLogController::class, 'index']);
+            Route::get('ringkasan',  [SuperadminAuditLogController::class, 'ringkasan']);
+            Route::get('{id}',       [SuperadminAuditLogController::class, 'show']);
+        });
+
+        // ── Laporan Keuangan ────────────────────────────────────────────────
+        Route::prefix('financial-report')->group(function () {
+            Route::get('/',       [SuperadminFinancialReportController::class, 'index']);
+            Route::get('daily',   [SuperadminFinancialReportController::class, 'dailyReport']);
+        });
+
+        // ── Konfigurasi Sistem ──────────────────────────────────────────────
+        Route::prefix('config')->group(function () {
+            Route::get('/',       [SuperadminSystemConfigController::class, 'index']);
+            Route::post('/',      [SuperadminSystemConfigController::class, 'store']);
+            Route::get('{key}',   [SuperadminSystemConfigController::class, 'getValue']);
+            Route::put('{key}',   [SuperadminSystemConfigController::class, 'setValue']);
+            Route::delete('{id}', [SuperadminSystemConfigController::class, 'destroy']);
+        });
     });
 });

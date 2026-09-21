@@ -9,6 +9,8 @@
     $pendingPinjaman  = \Illuminate\Support\Facades\DB::table('pinjamen')->where('status','pending')->count();
     $pendingBayar     = \Illuminate\Support\Facades\DB::table('pembayarans')->where('status','pending')->count();
     $totalPending     = $pendingAnggota + $pendingSukarela + $pendingPokok + $pendingPinjaman + $pendingBayar;
+
+    $topbarIsSuperadmin = filament()->getCurrentPanel()?->getId() === 'superadmin';
 @endphp
 
 <div class="fi-topbar-ctn">
@@ -42,11 +44,11 @@
             <div>
                 <div style="display:flex;align-items:center;gap:.5rem;">
                     <h1 style="margin:0;font-size:1.2rem;font-weight:800;color:#1f2937;line-height:1;">
-                        Koperasi Syariah <span style="color:#047857;">K-Samara</span>
+                        {{ $topbarIsSuperadmin ? 'Superadmin' : 'Koperasi Syariah' }} <span style="color:#047857;">K-Samara</span>
                     </h1>
                     <span style="background:#fef3c7;color:#92400e;font-size:.6rem;font-weight:800;padding:.15rem .5rem;border-radius:9999px;border:1px solid #fcd34d;letter-spacing:.08em;text-transform:uppercase;">Syariah</span>
                 </div>
-                <p style="margin:.15rem 0 0;font-size:.7rem;color:#6b7280;font-weight:500;">Dashboard Administrasi</p>
+                <p style="margin:.15rem 0 0;font-size:.7rem;color:#6b7280;font-weight:500;">{{ $topbarIsSuperadmin ? 'Panel Superadmin' : 'Dashboard Administrasi' }}</p>
             </div>
         </div>
 
@@ -54,6 +56,7 @@
         <div style="display:flex;align-items:center;gap:1rem;">
 
             {{-- NOTIFICATION BELL --}}
+            @if (! $topbarIsSuperadmin)
             <div x-data="{ open: false }" style="position:relative;">
                 <button
                     x-on:click="open = !open"
@@ -126,6 +129,7 @@
                     </div>
                 </div>
             </div>
+            @endif
 
             <div style="width:1px;height:28px;background:#e5e7eb;"></div>
 
@@ -141,8 +145,8 @@
                         <svg style="width:.9rem;height:.9rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
                     </div>
                     <div style="text-align:left;display:none;" class="md:block" style="display:block;">
-                        <p style="font-size:.72rem;font-weight:700;color:#111827;line-height:1.2;margin:0;">{{ filament()->auth()->user()?->name ?? 'Admin' }}</p>
-                        <p style="font-size:.62rem;color:#059669;margin:0;">Administrator</p>
+                        <p style="font-size:.72rem;font-weight:700;color:#111827;line-height:1.2;margin:0;">{{ filament()->auth()->user()?->nama_lengkap ?? 'Pengguna' }}</p>
+                        <p style="font-size:.62rem;color:#059669;margin:0;">{{ filament()->auth()->user()?->role === 'superadmin' ? 'Superadmin' : 'Administrator' }}</p>
                     </div>
                     <svg style="width:.75rem;height:.75rem;color:#9ca3af;transition:transform .2s;" :style="open ? 'transform:rotate(180deg)' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
                 </button>
@@ -157,7 +161,7 @@
                     style="position:absolute;right:0;top:calc(100% + .35rem);width:210px;z-index:9999;background:#fff;border-radius:1rem;box-shadow:0 16px 32px rgba(0,0,0,.1);border:1px solid #f3f4f6;overflow:hidden;"
                 >
                     <div style="padding:.6rem 1rem .5rem;border-bottom:1px solid #f3f4f6;background:#f9fafb;border-radius:1rem 1rem 0 0;">
-                        <p style="font-size:.72rem;font-weight:700;color:#111827;margin:0;">{{ filament()->auth()->user()?->name ?? 'Admin Koperasi' }}</p>
+                        <p style="font-size:.72rem;font-weight:700;color:#111827;margin:0;">{{ filament()->auth()->user()?->nama_lengkap ?? 'Pengguna' }}</p>
                         <p style="font-size:.62rem;color:#6b7280;margin:0;word-break:break-all;">{{ filament()->auth()->user()?->email ?? 'admin@ksamara.com' }}</p>
                     </div>
 

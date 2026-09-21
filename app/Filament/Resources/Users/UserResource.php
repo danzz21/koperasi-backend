@@ -13,6 +13,7 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 use UnitEnum;
 
 class UserResource extends Resource
@@ -37,6 +38,13 @@ class UserResource extends Resource
     public static function table(Table $table): Table
     {
         return UsersTable::configure($table);
+    }
+
+    public static function getEloquentQuery(): Builder
+    {
+        // Panel Admin hanya mengelola data ANGGOTA.
+        // Akun Admin & Superadmin dikelola dari panel /superadmin.
+        return parent::getEloquentQuery()->where('role', 'anggota');
     }
 
     public static function getRelations(): array
