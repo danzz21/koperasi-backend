@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Support\AuthUserPayload;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -105,15 +106,7 @@ class GoogleAuthController extends Controller
             'message' => 'Login Google berhasil.',
             'token'   => $token,
             'token_type' => 'Bearer',
-            'user'    => [
-                'id'       => $user->id,
-                'nama'     => $user->nama_lengkap,
-                'username' => $user->username,
-                'email'    => $user->email,
-                'avatar'   => $user->avatar,
-                'role'     => $user->role,
-                'status'   => $user->status,
-            ],
+            'user'    => AuthUserPayload::for($user->refresh()),
         ]);
     }
 

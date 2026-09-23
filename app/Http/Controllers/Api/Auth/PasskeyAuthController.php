@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Support\WebAuthn\Base64Url;
 use App\Support\WebAuthn\WebAuthnException;
 use App\Support\WebAuthn\WebAuthnVerifier;
+use App\Support\AuthUserPayload;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -122,7 +123,7 @@ class PasskeyAuthController extends Controller
         return response()->json([
             'message' => 'Sidik jari / Face ID berhasil diaktifkan.',
             'passkey' => $this->passkeyPayload($passkey),
-            'user'    => $this->userPayload($user),
+            'user'    => AuthUserPayload::for($user),
         ], 201);
     }
     /* ───────────────────────── Login biometrik (public) ───────────────────────── */
@@ -249,7 +250,7 @@ class PasskeyAuthController extends Controller
             'token'      => $token,
             'token_type' => 'Bearer',
             'passkey'    => $this->passkeyPayload($passkey->fresh()),
-            'user'       => $this->userPayload($user),
+            'user'       => AuthUserPayload::for($user),
         ]);
     }
 
@@ -410,22 +411,6 @@ class PasskeyAuthController extends Controller
             'device_name'  => $passkey->device_name,
             'last_used_at' => optional($passkey->last_used_at)->toIso8601String(),
             'created_at'   => optional($passkey->created_at)->toIso8601String(),
-        ];
-    }
-
-    /**
-     * @return array<string, mixed>
-     */
-    private function userPayload(User $user): array
-    {
-        return [
-            'id'       => $user->id,
-            'nama'     => $user->nama_lengkap,
-            'username' => $user->username,
-            'email'    => $user->email,
-            'avatar'   => $user->avatar,
-            'role'     => $user->role,
-            'status'   => $user->status,
         ];
     }
 

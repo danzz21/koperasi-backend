@@ -24,6 +24,7 @@ return Application::configure(basePath: dirname(__DIR__))
         // Alias middleware
         $middleware->alias([
             'role' => \App\Http\Middleware\RoleMiddleware::class,
+            'profile.completed' => \App\Http\Middleware\EnsureProfileCompleted::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Support\AuthUserPayload;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
@@ -51,14 +52,7 @@ class AuthController extends Controller
         return response()->json([
             'token'    => $token,
             'token_type' => 'Bearer',
-            'user'     => [
-                'id'       => $user->id,
-                'nama'     => $user->nama_lengkap,
-                'username' => $user->username,
-                'email'    => $user->email,
-                'role'     => $user->role,
-                'status'   => $user->status,
-            ],
+            'user'     => AuthUserPayload::for($user->refresh()),
         ]);
     }
 
@@ -124,7 +118,7 @@ class AuthController extends Controller
     public function me(Request $request)
     {
         return response()->json([
-            'user' => $request->user(),
+            'user' => AuthUserPayload::for($request->user()),
         ]);
     }
 

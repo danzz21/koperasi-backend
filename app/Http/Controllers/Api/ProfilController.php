@@ -4,8 +4,10 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Support\AuthUserPayload;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rule;
 
 class ProfilController extends Controller
 {
@@ -46,21 +48,31 @@ class ProfilController extends Controller
 
         $validated = $request->validate([
             'nama_lengkap' => 'nullable|string|max:100',
+            'nomor_ktp' => [
+                'nullable', 'string', 'digits:16',
+                Rule::unique('users', 'nomor_ktp')->ignore($user->id),
+            ],
             'jenis_kelamin' => 'nullable|string|in:L,P',
-            'tgl_lahir' => 'nullable|date',
+            'tgl_lahir' => 'nullable|date|before:today',
             'pekerjaan' => 'nullable|string|max:100',
             'alamat' => 'nullable|string|max:500',
-            'nomor_hp' => 'nullable|string|max:15',
+            'nomor_hp' => 'nullable|string|max:20',
+            'nomor_hp_keluarga' => 'nullable|string|max:20',
             'no_rek' => 'nullable|string|max:30',
             'atasnama_rekening' => 'nullable|string|max:100',
             'jenis_bank' => 'nullable|string|max:50',
+        ], [
+            'nomor_ktp.digits' => 'Nomor KTP harus 16 digit angka.',
+            'nomor_ktp.unique' => 'Nomor KTP ini sudah terdaftar pada akun lain.',
+            'tgl_lahir.before' => 'Tanggal lahir tidak boleh di masa depan.',
         ]);
 
         $user->update($validated);
 
         return response()->json([
             'message' => 'Profil berhasil diperbarui',
-            'data' => $user
+            'data'    => $user->refresh(),
+            'user'    => AuthUserPayload::for($user),
         ]);
     }
 

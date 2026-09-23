@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\SimpananController;
 use App\Http\Controllers\Api\PinjamanController;
 use App\Http\Controllers\Api\CicilanController;
+use App\Http\Controllers\Api\OnboardingController;
 use App\Http\Controllers\Api\ProfilController;
 use App\Http\Controllers\Api\PpobController;
 use App\Http\Controllers\Api\PaymentGatewayController;
@@ -59,8 +60,16 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::post('register/verify',  [PasskeyAuthController::class, 'registerVerify']);
     });
 
-    // ── ANGGOTA ─────────────────────────────────────────────────────────────
+    // ── ONBOARDING ANGGOTA ──────────────────────────────────────────────────
+    // Hanya butuh role anggota: tetap bisa diakses walau data belum lengkap,
+    // justru inilah jalur untuk melengkapinya.
     Route::middleware('role:anggota')->prefix('anggota')->group(function () {
+        Route::get('onboarding',  [OnboardingController::class, 'show']);
+        Route::post('onboarding', [OnboardingController::class, 'store']);
+    });
+
+    // ── ANGGOTA (wajib profil lengkap) ──────────────────────────────────────
+    Route::middleware(['role:anggota', 'profile.completed'])->prefix('anggota')->group(function () {
 
         // Dashboard
         Route::get('dashboard', [DashboardController::class, 'index']);
