@@ -106,7 +106,7 @@ class GoogleAuthController extends Controller
             'message' => 'Login Google berhasil.',
             'token'   => $token,
             'token_type' => 'Bearer',
-            'user'    => AuthUserPayload::for($user->refresh()),
+            'user'    => AuthUserPayload::for($user->fresh()),
         ]);
     }
 

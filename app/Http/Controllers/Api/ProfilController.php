@@ -71,8 +71,8 @@ class ProfilController extends Controller
 
         return response()->json([
             'message' => 'Profil berhasil diperbarui',
-            'data'    => $user->refresh(),
-            'user'    => AuthUserPayload::for($user),
+            'data'    => $user->fresh(),
+            'user'    => AuthUserPayload::for($user->fresh()),
         ]);
     }
 
