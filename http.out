@@ -1,0 +1,17 @@
+PHPUnit 11.5.56 by Sebastian Bergmann and contributors.
+
+Runtime:       PHP 8.3.33
+Configuration: C:\Users\PTDRa\koperasi-backend\phpunit.xml
+
+.....                                                               5 / 5 (100%)
+
+Time: 00:05.001, Memory: 62.00 MB
+
+Pending Approval Pages (Tests\Feature\PendingApprovalPages)
+ ✔ Pending anggota page lists and approves a member
+ ✔ Pending anggota page rejects a member
+ ✔ Other pending pages render with empty state
+ ✔ Dashboard renders with pending links
+ ✔ Pending pages render over http
+
+OK (5 tests, 27 assertions)

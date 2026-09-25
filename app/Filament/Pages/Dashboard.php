@@ -16,15 +16,6 @@ class Dashboard extends BaseDashboard
         return 'filament.pages.dashboard';
     }
 
-    /**
-     * Hilangkan judul "Dashboard" di paling atas halaman.
-     * (Header hanya dirender Filament bila ada judul/subheading/breadcrumb.)
-     */
-    public function getHeading(): string
-    {
-        return '';
-    }
-
     public function getViewData(): array
     {
         // --- Simpanan ---

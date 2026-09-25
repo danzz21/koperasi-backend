@@ -14,7 +14,8 @@
     {{-- HEADER --}}
     <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:.75rem;margin-bottom:1.25rem;">
         <div>
-            <p style="margin:0;font-size:.8rem;color:#6b7280;">Ringkasan rinci arus kas, pembiayaan, transaksi umum, dan performa koperasi</p>
+            <h2 style="margin:0;font-size:1.6rem;font-weight:800;color:#111827;">Dashboard Utama</h2>
+            <p style="margin:.2rem 0 0;font-size:.8rem;color:#6b7280;">Ringkasan rinci arus kas, pembiayaan, transaksi umum, dan performa koperasi</p>
         </div>
         <div style="display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;">
             <div style="display:flex;align-items:center;gap:.4rem;background:#fff;padding:.35rem .7rem;border-radius:.65rem;border:1px solid #e5e7eb;font-size:.7rem;">

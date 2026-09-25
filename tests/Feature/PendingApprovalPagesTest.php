@@ -78,13 +78,6 @@ class PendingApprovalPagesTest extends TestCase
         }
     }
 
-    public function test_dashboard_heading_is_hidden(): void
-    {
-        $this->loginAsAdmin();
-
-        $this->assertSame('', (new Dashboard)->getHeading());
-    }
-
     public function test_dashboard_renders_with_pending_links(): void
     {
         $this->loginAsAdmin();
@@ -102,6 +95,35 @@ class PendingApprovalPagesTest extends TestCase
         Livewire::test(Dashboard::class)
             ->assertSuccessful()
             ->assertSee('Persetujuan Pending')
-            ->assertSee('Anggota Baru');
+            ->assertSee('Anggota Baru')
+            ->assertSee('Dashboard Utama');
+    }
+
+    /**
+     * Render penuh lewat HTTP untuk setiap halaman pending + dashboard.
+     * Ini menangkap error view/asset yang tidak terlihat di test Livewire.
+     */
+    public function test_pending_pages_render_over_http(): void
+    {
+        $this->loginAsAdmin();
+        $this->pendingAnggota();
+
+        $urls = [
+            '/admin',
+            '/admin/pending/anggota',
+            '/admin/pending/sukarela',
+            '/admin/pending/simpanan-pokok',
+            '/admin/pending/pinjaman',
+            '/admin/pending/pembayaran',
+        ];
+
+        foreach ($urls as $url) {
+            $response = $this->get($url);
+
+            $this->assertTrue(
+                $response->isSuccessful(),
+                $url.' gagal dengan HTTP '.$response->getStatusCode()
+            );
+        }
     }
 }
