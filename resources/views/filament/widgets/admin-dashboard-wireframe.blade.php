@@ -1,6 +1,7 @@
 <style>
 .ks-card { transition: transform .2s, box-shadow .2s; }
 .ks-card:hover { transform: translateY(-3px); }
+.ks-pending-link:hover { background:#f0fdf4; border-color:#a7f3d0; }
 .ks-grid-4 { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:.85rem; margin-bottom:1rem; }
 .ks-grid-bottom { display:grid; grid-template-columns:2fr 1fr; gap:1rem; margin-bottom:1rem; }
 @media(max-width:1100px){ .ks-grid-4{ grid-template-columns:repeat(3,minmax(0,1fr)); } }
@@ -13,8 +14,7 @@
     {{-- HEADER --}}
     <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:.75rem;margin-bottom:1.25rem;">
         <div>
-            <h2 style="margin:0;font-size:1.6rem;font-weight:800;color:#111827;">Dashboard Utama</h2>
-            <p style="margin:.2rem 0 0;font-size:.8rem;color:#6b7280;">Ringkasan rinci arus kas, pembiayaan, transaksi umum, dan performa koperasi</p>
+            <p style="margin:0;font-size:.8rem;color:#6b7280;">Ringkasan rinci arus kas, pembiayaan, transaksi umum, dan performa koperasi</p>
         </div>
         <div style="display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;">
             <div style="display:flex;align-items:center;gap:.4rem;background:#fff;padding:.35rem .7rem;border-radius:.65rem;border:1px solid #e5e7eb;font-size:.7rem;">
@@ -162,26 +162,30 @@
                 <h3 style="margin:0;font-size:.9rem;font-weight:700;color:#1f2937;">🔔 Persetujuan Pending</h3>
                 <span style="font-size:.68rem;background:#fef3c7;color:#92400e;padding:.15rem .55rem;border-radius:9999px;font-weight:700;">Total: {{ $totalPending }}</span>
             </div>
+            @php
+                // Satu daftar item pending: dipakai kartu ini dan halaman detailnya.
+                $pendingItems = [
+                    ['url' => \App\Filament\Pages\PendingAnggota::getUrl(), 'label' => 'Anggota Baru', 'note' => 'Verifikasi pendaftaran', 'count' => $pendingAnggota, 'bg' => '#d1fae5', 'ic' => '#059669', 'ac' => '#059669', 'hb' => '#ecfdf5', 'hbBorder' => '#a7f3d0'],
+                    ['url' => \App\Filament\Pages\PendingSukarela::getUrl(), 'label' => 'Simpanan Sukarela', 'note' => 'Konfirmasi setoran', 'count' => $pendingSukarela, 'bg' => '#dbeafe', 'ic' => '#2563eb', 'ac' => '#3b82f6', 'hb' => '#eff6ff', 'hbBorder' => '#bfdbfe'],
+                    ['url' => \App\Filament\Pages\PendingSimpananPokok::getUrl(), 'label' => 'Simpanan Pokok', 'note' => 'Verifikasi pokok awal', 'count' => $pendingPokok, 'bg' => '#e0e7ff', 'ic' => '#4f46e5', 'ac' => '#6366f1', 'hb' => '#eef2ff', 'hbBorder' => '#c7d2fe'],
+                    ['url' => \App\Filament\Pages\PendingPinjaman::getUrl(), 'label' => 'Pengajuan Pinjaman', 'note' => 'Persetujuan akad', 'count' => $pendingPinjaman, 'bg' => '#fef3c7', 'ic' => '#d97706', 'ac' => '#f59e0b', 'hb' => '#fffbeb', 'hbBorder' => '#fde68a'],
+                    ['url' => \App\Filament\Pages\PendingPembayaran::getUrl(), 'label' => 'Pembayaran Cicilan', 'note' => 'Setoran angsuran', 'count' => $pendingBayar, 'bg' => '#ede9fe', 'ic' => '#7c3aed', 'ac' => '#a855f7', 'hb' => '#f5f3ff', 'hbBorder' => '#ddd6fe'],
+                ];
+            @endphp
             <div style="display:flex;flex-direction:column;gap:.4rem;">
-                @foreach([
-                    ['Anggota Baru','Verifikasi pendaftaran',$pendingAnggota,'#d1fae5','#059669','#059669'],
-                    ['Simpanan Sukarela','Konfirmasi setoran',$pendingSukarela,'#dbeafe','#2563eb','#3b82f6'],
-                    ['Simpanan Pokok','Verifikasi pokok awal',$pendingPokok,'#e0e7ff','#4f46e5','#6366f1'],
-                    ['Pengajuan Pinjaman','Persetujuan akad',$pendingPinjaman,'#fef3c7','#d97706','#f59e0b'],
-                    ['Pembayaran Cicilan','Setoran angsuran',$pendingBayar,'#ede9fe','#7c3aed','#a855f7'],
-                ] as [$label,$note,$count,$bg,$ic,$ac])
-                <div style="display:flex;align-items:center;justify-content:space-between;padding:.5rem .65rem;background:#f9fafb;border:1px solid #f3f4f6;border-radius:.65rem;">
-                    <div style="display:flex;align-items:center;gap:.5rem;">
-                        <div style="width:28px;height:28px;border-radius:.45rem;background:{{ $bg }};display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-                            <svg style="width:.75rem;height:.75rem;color:{{ $ic }};" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                        </div>
-                        <div>
-                            <p style="margin:0;font-size:.72rem;font-weight:700;color:#111827;">{{ $label }}</p>
-                            <p style="margin:0;font-size:.62rem;color:#6b7280;">{{ $note }}</p>
-                        </div>
-                    </div>
-                    <span style="min-width:26px;text-align:center;padding:.2rem .45rem;font-size:.7rem;font-weight:800;border-radius:.4rem;background:{{ $count>0 ? $ac : '#e5e7eb' }};color:{{ $count>0 ? '#fff' : '#6b7280' }};">{{ $count }}</span>
-                </div>
+                @foreach($pendingItems as $item)
+                <a href="{{ $item['url'] }}" class="ks-pending-link" style="display:flex;align-items:center;justify-content:space-between;padding:.5rem .65rem;background:#f9fafb;border:1px solid #f3f4f6;border-radius:.65rem;transition:background .15s,border-color .15s;">
+                    <span style="display:flex;align-items:center;gap:.5rem;">
+                        <span style="width:28px;height:28px;border-radius:.45rem;background:{{ $item['bg'] }};display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                            <svg style="width:.75rem;height:.75rem;color:{{ $item['ic'] }};" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        </span>
+                        <span>
+                            <span style="display:block;font-size:.72rem;font-weight:700;color:#111827;">{{ $item['label'] }}</span>
+                            <span style="display:block;font-size:.62rem;color:#6b7280;">{{ $item['note'] }}</span>
+                        </span>
+                    </span>
+                    <span style="min-width:26px;text-align:center;padding:.2rem .45rem;font-size:.7rem;font-weight:800;border-radius:.4rem;background:{{ $item['count'] > 0 ? $item['ac'] : '#e5e7eb' }};color:{{ $item['count'] > 0 ? '#fff' : '#6b7280' }};">{{ $item['count'] }}</span>
+                </a>
                 @endforeach
             </div>
         </div>

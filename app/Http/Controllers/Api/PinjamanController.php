@@ -27,7 +27,7 @@ class PinjamanController extends Controller
         $data['id_anggota'] = $request->user()->id;
         $data['sisa_pinjaman'] = $data['nominal'];
         $data['angsuran'] = $data['nominal'] / $data['tenor'];
-        $data['status'] = 'ditolak';
+        $data['status'] = 'pending'; // menunggu persetujuan admin
         $data['keterangan'] = ($data['keterangan'] ?? null);
         $id = DB::table('pinjamen')->insertGetId($data + ['created_at' => now(), 'updated_at' => now()]);
 

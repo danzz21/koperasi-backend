@@ -41,6 +41,12 @@ class AdminPanelProvider extends PanelProvider
             ->pages([
                 Dashboard::class,
                 \App\Filament\Pages\LaporanAnalisis::class,
+                // Halaman detail "Persetujuan Pending" — dibuka dari kartu dashboard
+                \App\Filament\Pages\PendingAnggota::class,
+                \App\Filament\Pages\PendingSukarela::class,
+                \App\Filament\Pages\PendingSimpananPokok::class,
+                \App\Filament\Pages\PendingPinjaman::class,
+                \App\Filament\Pages\PendingPembayaran::class,
             ])
             ->resources([
                 \App\Filament\Resources\Users\UserResource::class,

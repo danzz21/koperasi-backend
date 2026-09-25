@@ -2,6 +2,7 @@
 
 namespace App\Filament\Widgets;
 
+use App\Support\PendingApprovals;
 use Filament\Widgets\Widget;
 use Illuminate\Support\Facades\DB;
 
@@ -62,12 +63,15 @@ class AdminDashboardWireframe extends Widget
         // --- Rasio Pembiayaan ---
         $rasio = $totalSimpanan > 0 ? round(($sisaPokok / $totalSimpanan) * 100, 1) : 0;
 
-        // --- Pending ---
-        $pendingAnggota   = DB::table('users')->where('role', 'anggota')->where('status', 'pending')->count();
-        $pendingSukarela  = DB::table('simpanans')->where('status', 'tidak_aktif')->where('jenis', 'sukarela')->count();
-        $pendingPokok     = DB::table('simpanans')->where('status', 'tidak_aktif')->where('jenis', 'pokok')->count();
-        $pendingPinjaman  = DB::table('pinjamen')->where('status', 'pending')->count();
-        $pendingBayar     = DB::table('pembayarans')->where('status', 'pending')->count();
+        // --- Pending (sumber tunggal, sama dengan halaman detail pending) ---
+        $pending = PendingApprovals::counts();
+
+        $pendingAnggota  = $pending['anggota'];
+        $pendingSukarela = $pending['sukarela'];
+        $pendingPokok    = $pending['pokok'];
+        $pendingPinjaman = $pending['pinjaman'];
+        $pendingBayar    = $pending['pembayaran'];
+        $totalPending    = $pending['total'];
 
         // --- Chart (12 bulan simpanan & pembiayaan) ---
         $chartLabels    = [];
@@ -111,7 +115,7 @@ class AdminDashboardWireframe extends Widget
             'pendingPokok'     => $pendingPokok,
             'pendingPinjaman'  => $pendingPinjaman,
             'pendingBayar'     => $pendingBayar,
-            'totalPending'     => $pendingAnggota + $pendingSukarela + $pendingPokok + $pendingPinjaman + $pendingBayar,
+            'totalPending'     => $totalPending,
             // chart
             'chartLabels'      => json_encode($chartLabels),
             'chartSimpanan'    => json_encode($chartSimpanan),

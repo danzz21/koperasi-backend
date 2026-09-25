@@ -2,6 +2,7 @@
 
 namespace App\Filament\Pages;
 
+use App\Support\PendingApprovals;
 use Filament\Pages\Dashboard as BaseDashboard;
 use Illuminate\Support\Facades\DB;
 
@@ -13,6 +14,15 @@ class Dashboard extends BaseDashboard
     public function getView(): string
     {
         return 'filament.pages.dashboard';
+    }
+
+    /**
+     * Hilangkan judul "Dashboard" di paling atas halaman.
+     * (Header hanya dirender Filament bila ada judul/subheading/breadcrumb.)
+     */
+    public function getHeading(): string
+    {
+        return '';
     }
 
     public function getViewData(): array
@@ -56,12 +66,15 @@ class Dashboard extends BaseDashboard
         // --- Rasio ---
         $rasio = $totalSimpanan > 0 ? round(($sisaPokok / $totalSimpanan) * 100, 1) : 0;
 
-        // --- Pending ---
-        $pendingAnggota  = DB::table('users')->where('role', 'anggota')->where('status', 'pending')->count();
-        $pendingSukarela = DB::table('simpanans')->where('status', 'tidak_aktif')->where('jenis', 'sukarela')->count();
-        $pendingPokok    = DB::table('simpanans')->where('status', 'tidak_aktif')->where('jenis', 'pokok')->count();
-        $pendingPinjaman = DB::table('pinjamen')->where('status', 'pending')->count();
-        $pendingBayar    = DB::table('pembayarans')->where('status', 'pending')->count();
+        // --- Pending (sumber tunggal, sama dengan halaman detail pending) ---
+        $pending = PendingApprovals::counts();
+
+        $pendingAnggota  = $pending['anggota'];
+        $pendingSukarela = $pending['sukarela'];
+        $pendingPokok    = $pending['pokok'];
+        $pendingPinjaman = $pending['pinjaman'];
+        $pendingBayar    = $pending['pembayaran'];
+        $totalPending    = $pending['total'];
 
         // --- Chart ---
         $chartLabels     = [];
