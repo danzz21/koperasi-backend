@@ -11,22 +11,36 @@
 
 <div style="width:100%;box-sizing:border-box;">
 
-    {{-- HEADER --}}
-    <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:.75rem;margin-bottom:1.25rem;">
-        <div>
-            <h2 style="margin:0;font-size:1.6rem;font-weight:800;color:#111827;">Dashboard Utama</h2>
-            <p style="margin:.2rem 0 0;font-size:.8rem;color:#6b7280;">Ringkasan rinci arus kas, pembiayaan, transaksi umum, dan performa koperasi</p>
+    {{-- DUAL DASHBOARD SWITCHER TABS --}}
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.75rem;margin-bottom:1.25rem;">
+        <div style="display:flex;align-items:center;gap:.5rem;background:#ffffff;padding:.35rem;border-radius:.85rem;border:1px solid #e5e7eb;box-shadow:0 1px 3px rgba(0,0,0,.04);width:fit-content;">
+            <a href="{{ \App\Filament\Pages\Dashboard::getUrl() }}" style="display:inline-flex;align-items:center;gap:.45rem;padding:.5rem 1rem;border-radius:.65rem;font-size:.78rem;font-weight:700;text-decoration:none;background:linear-gradient(135deg,#059669 0%,#047857 100%);color:#ffffff;box-shadow:0 2px 8px rgba(5,150,105,.25);">
+                <i class="fas fa-landmark" style="font-size:.85rem;color:#fbbf24;"></i>
+                <span>Dashboard Utama (Koperasi)</span>
+            </a>
+            <a href="{{ \App\Filament\Pages\DashboardPpob::getUrl() }}" style="display:inline-flex;align-items:center;gap:.45rem;padding:.5rem 1rem;border-radius:.65rem;font-size:.78rem;font-weight:700;text-decoration:none;color:#4b5563;background:transparent;transition:all .2s;" onmouseover="this.style.background='#f3f4f6';this.style.color='#111827';" onmouseout="this.style.background='transparent';this.style.color='#4b5563';">
+                <i class="fas fa-bolt" style="font-size:.85rem;color:#d97706;"></i>
+                <span>Dashboard PPOB &amp; E-Wallet</span>
+            </a>
         </div>
+
         <div style="display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;">
-            <div style="display:flex;align-items:center;gap:.4rem;background:#fff;padding:.35rem .7rem;border-radius:.65rem;border:1px solid #e5e7eb;font-size:.7rem;">
-                <span style="color:#4b5563;font-weight:600;">🔽 Periode Operasional:</span>
+            <div style="display:flex;align-items:center;gap:.4rem;background:#fff;padding:.4rem .75rem;border-radius:.65rem;border:1px solid #e5e7eb;font-size:.7rem;">
+                <span style="color:#4b5563;font-weight:600;">🔽 Periode:</span>
                 <span style="color:#047857;font-weight:800;">{{ $filterLabel }}</span>
             </div>
-            <div style="background:#fff;padding:.35rem .75rem;border-radius:.65rem;border:1px solid #e5e7eb;font-size:.7rem;color:#4b5563;font-weight:600;">
+            <div style="background:#fff;padding:.4rem .75rem;border-radius:.65rem;border:1px solid #e5e7eb;font-size:.7rem;color:#4b5563;font-weight:600;">
                 🕐 {{ now()->format('d M Y, H:i') }} WIB
             </div>
         </div>
     </div>
+
+    {{-- HEADER --}}
+    <div style="margin-bottom:1.25rem;">
+        <h2 style="margin:0;font-size:1.5rem;font-weight:800;color:#111827;">Dashboard Utama</h2>
+        <p style="margin:.2rem 0 0;font-size:.8rem;color:#6b7280;">Ringkasan rinci arus kas, pembiayaan, simpanan, transaksi umum, dan performa koperasi</p>
+    </div>
+
 
     {{-- BARIS 1 --}}
     <div class="ks-grid-4">

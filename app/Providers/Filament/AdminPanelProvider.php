@@ -40,6 +40,7 @@ class AdminPanelProvider extends PanelProvider
             ->maxContentWidth(Width::Full)
             ->pages([
                 Dashboard::class,
+                \App\Filament\Pages\DashboardPpob::class,
                 \App\Filament\Pages\LaporanAnalisis::class,
                 // Halaman detail "Persetujuan Pending" — dibuka dari kartu dashboard
                 \App\Filament\Pages\PendingAnggota::class,

@@ -29,6 +29,8 @@ class AppServiceProvider extends ServiceProvider
             \App\Models\Transaksi::class,
             \App\Models\PpobTransaksi::class,
             \App\Models\Akad::class,
+            \App\Models\Ewallet::class,
+            \App\Models\EwalletTransaction::class,
         ] as $model) {
             $model::observe(\App\Observers\AuditObserver::class);
         }

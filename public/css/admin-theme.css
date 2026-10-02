@@ -573,3 +573,88 @@
 .ks-report-in, .ks-report-out { display: inline-block; width: 12px; height: 3px; margin: 0 .3rem 2px .75rem; background: #059669; }
 .ks-report-out { background: #ef4444; }
 @media (max-width: 800px) { .ks-report-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+/* ============================================================
+   24. PENDING APPROVALS BANNER & BUTTONS
+   ============================================================ */
+.ks-pending-card {
+    background: #ffffff !important;
+    border: 1px solid #e5e7eb !important;
+    border-radius: 1rem !important;
+    padding: 1rem 1.25rem !important;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04) !important;
+    margin-bottom: 1.25rem !important;
+    display: flex !important;
+    flex-wrap: wrap !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 1rem !important;
+}
+.ks-pending-left {
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.85rem !important;
+    flex: 1 !important;
+    min-width: 260px !important;
+}
+.ks-pending-icon-box {
+    width: 42px !important;
+    height: 42px !important;
+    border-radius: 0.75rem !important;
+    background: #fef3c7 !important;
+    color: #d97706 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 1.15rem !important;
+    flex-shrink: 0 !important;
+    border: 1px solid #fde68a !important;
+}
+.ks-pending-title {
+    margin: 0 !important;
+    font-size: 0.95rem !important;
+    font-weight: 800 !important;
+    color: #1f2937 !important;
+    line-height: 1.2 !important;
+}
+.ks-pending-desc {
+    margin: 0.25rem 0 0 !important;
+    font-size: 0.75rem !important;
+    color: #6b7280 !important;
+    line-height: 1.35 !important;
+}
+.ks-pending-btn-back {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 0.5rem !important;
+    padding: 0.5rem 0.9rem !important;
+    background: #ffffff !important;
+    border: 1px solid #d1d5db !important;
+    border-radius: 0.65rem !important;
+    font-size: 0.75rem !important;
+    font-weight: 700 !important;
+    color: #374151 !important;
+    text-decoration: none !important;
+    transition: all 0.2s ease !important;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05) !important;
+    white-space: nowrap !important;
+    cursor: pointer !important;
+}
+.ks-pending-btn-back:hover {
+    background: #ecfdf5 !important;
+    border-color: #a7f3d0 !important;
+    color: #047857 !important;
+    transform: translateX(-2px) !important;
+}
+.ks-pending-btn-back svg,
+.ks-pending-btn-back i {
+    width: 14px !important;
+    height: 14px !important;
+    max-width: 14px !important;
+    max-height: 14px !important;
+    font-size: 0.75rem !important;
+    flex-shrink: 0 !important;
+    display: inline-block !important;
+    vertical-align: middle !important;
+}
+

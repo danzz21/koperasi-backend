@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\SimpananController;
 use App\Http\Controllers\Api\PinjamanController;
 use App\Http\Controllers\Api\CicilanController;
+use App\Http\Controllers\Api\EwalletController;
 use App\Http\Controllers\Api\OnboardingController;
 use App\Http\Controllers\Api\ProfilController;
 use App\Http\Controllers\Api\PpobController;
@@ -129,6 +130,13 @@ Route::middleware(['auth:sanctum'])->group(function () {
             Route::post('proses-simpanan',             [PaymentGatewayController::class, 'prosesSimpanan']);
             Route::post('simulasi-bayar',              [PaymentGatewayController::class, 'simulasiBayar']);
             Route::get('metode',                       [PaymentGatewayController::class, 'getMetode']);
+        });
+
+        // E-Wallet Koperasi (saldo terpisah dari simpanan, dipakai bayar PPOB)
+        Route::prefix('ewallet')->group(function () {
+            Route::get('/',       [EwalletController::class, 'index']);
+            Route::get('riwayat', [EwalletController::class, 'riwayat']);
+            Route::post('topup',  [EwalletController::class, 'topup']);
         });
     });
 

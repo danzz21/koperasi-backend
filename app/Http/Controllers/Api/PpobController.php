@@ -2,12 +2,21 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Exceptions\InsufficientBalanceException;
 use App\Http\Controllers\Controller;
+use App\Support\EwalletService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class PpobController extends Controller
 {
+    /** Metode pembayaran yang memakai saldo E-Wallet Koperasi. */
+    public const EWALLET = 'ewallet';
+
+    public function __construct(private readonly EwalletService $ewallet)
+    {
+    }
+
     private function idAnggota(Request $r): int
     {
         return (int) $r->user()->id;
@@ -114,49 +123,76 @@ class PpobController extends Controller
         $orderId = 'PPOB-' . now()->format('ymd') . '-' . strtoupper(substr(uniqid(), -6));
         $biaya   = str_contains($request->payment_method, '_va') ? 4000 : 0;
         $total   = $produk['harga'] + $biaya;
-        $kode    = $this->generatePaymentCode($request->payment_method);
+        $kode    = $request->payment_method === self::EWALLET
+            ? 'EWALLET-' . strtoupper(substr($refId, -6))
+            : $this->generatePaymentCode($request->payment_method);
         $expired = now()->addHour();
 
-        DB::table('ppob_transaksi')->insert([
-            'id_anggota'    => $id,
-            'jenis_produk'  => $request->jenis_produk,
-            'provider'      => $produk['provider'],
-            'nomor_tujuan'  => $request->nomor_tujuan,
-            'nominal'       => $produk['nominal'],
-            'harga'         => $produk['harga'],
-            'kode_produk'   => $produk['kode'],
-            'nama_produk'   => $produk['nama'],
-            'status'        => 'pending',
-            'ref_id'        => $refId,
-            'payment_ref'   => $orderId,
-            'payment_method'=> $request->payment_method,
-            'keterangan'    => 'Menunggu pembayaran',
-            'created_at'    => now(),
-            'updated_at'    => now(),
-        ]);
+        // Bayar langsung dari saldo E-Wallet Koperasi (saldo dipotong dulu,
+        // lalu transaksi PPOB langsung dinyatakan lunas).
+        $pakaiSaldo  = $request->payment_method === self::EWALLET;
+        $statusPpob  = $pakaiSaldo ? 'success' : 'pending';
+        $statusBayar = $pakaiSaldo ? 'paid' : 'pending';
 
-        $ppobId = DB::getPdo()->lastInsertId();
+        try {
+            $ppobId = DB::transaction(function () use ($request, $id, $produk, $total, $pakaiSaldo, $refId, $orderId, $kode, $biaya, $expired, $statusPpob, $statusBayar) {
+                if ($pakaiSaldo) {
+                    $this->ewallet->bayar($id, $total, 'PPOB: ' . $produk['nama'], $refId);
+                }
 
-        DB::table('payment_gateway_transaksi')->insert([
-            'id_anggota'       => $id,
-            'order_id'         => $orderId,
-            'jenis_pembayaran' => 'ppob',
-            'ref_id'           => (string) $ppobId,
-            'nominal'          => $produk['harga'],
-            'biaya_admin'      => $biaya,
-            'total_bayar'      => $total,
-            'payment_method'   => $request->payment_method,
-            'payment_code'     => $kode,
-            'payment_expired'  => $expired,
-            'status'           => 'pending',
-            'keterangan'       => 'PPOB: ' . $produk['nama'],
-            'created_at'       => now(),
-            'updated_at'       => now(),
-        ]);
+                DB::table('ppob_transaksi')->insert([
+                    'id_anggota'    => $id,
+                    'jenis_produk'  => $request->jenis_produk,
+                    'provider'      => $produk['provider'],
+                    'nomor_tujuan'  => $request->nomor_tujuan,
+                    'nominal'       => $produk['nominal'],
+                    'harga'         => $produk['harga'],
+                    'kode_produk'   => $produk['kode'],
+                    'nama_produk'   => $produk['nama'],
+                    'status'        => $statusPpob,
+                    'ref_id'        => $refId,
+                    'payment_ref'   => $orderId,
+                    'payment_method'=> $request->payment_method,
+                    'keterangan'    => $pakaiSaldo ? 'Dibayar langsung via saldo E-Wallet' : 'Menunggu pembayaran',
+                    'created_at'    => now(),
+                    'updated_at'    => now(),
+                ]);
+
+                $idBaru = DB::getPdo()->lastInsertId();
+
+                DB::table('payment_gateway_transaksi')->insert([
+                    'id_anggota'       => $id,
+                    'order_id'         => $orderId,
+                    'jenis_pembayaran' => 'ppob',
+                    'ref_id'           => (string) $idBaru,
+                    'nominal'          => $produk['harga'],
+                    'biaya_admin'      => $biaya,
+                    'total_bayar'      => $total,
+                    'payment_method'   => $request->payment_method,
+                    'payment_code'     => $kode,
+                    'payment_expired'  => $expired,
+                    'paid_at'          => $pakaiSaldo ? now() : null,
+                    'status'           => $statusBayar,
+                    'keterangan'       => 'PPOB: ' . $produk['nama'],
+                    'created_at'       => now(),
+                    'updated_at'       => now(),
+                ]);
+
+                return $idBaru;
+            });
+        } catch (InsufficientBalanceException $e) {
+            return response()->json([
+                'message'    => 'Saldo E-Wallet tidak cukup. Topup saldo dulu sebelum membeli produk ini.',
+                'saldo'      => $e->saldo,
+                'dibutuhkan' => $e->dibutuhkan,
+                'kurang'     => $e->dibutuhkan - $e->saldo,
+            ], 422);
+        }
 
         return response()->json([
-            'message'  => 'Order berhasil dibuat!',
+            'message'  => $pakaiSaldo ? 'Pembayaran berhasil dari saldo E-Wallet!' : 'Order berhasil dibuat!',
             'order_id' => $orderId,
+            'paid'     => $pakaiSaldo,
             'payment'  => [
                 'code'    => $kode,
                 'method'  => $request->payment_method,
