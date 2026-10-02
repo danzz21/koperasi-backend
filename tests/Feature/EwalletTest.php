@@ -10,6 +10,7 @@ use App\Support\MidtransService;
 use App\Models\User;
 use Filament\Facades\Filament;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Laravel\Sanctum\Sanctum;
@@ -185,13 +186,19 @@ class EwalletTest extends TestCase
         $this->assertArrayHasKey('ewalletStats', $data);
         $this->assertSame(300000.0, $data['ewalletStats']['total_saldo']);
         $this->assertSame(300000.0, $data['ewalletStats']['topup_bulan']);
-        $this->assertSame(0, $data['ewalletStats']['pending']);
 
-        // Permintaan baru → muncul di daftar pending dashboard
-        app(EwalletService::class)->buatPermintaanTopup($user->id, 50000, 'transfer_bri');
+        // HanyaTopup milik user ini yang diperiksa (DB dev bisa punya data lain)
+        $pending = EwalletTransaction::where('id_anggota', $user->id)
+            ->where('tipe', 'topup')
+            ->where('status', 'pending')
+            ->count();
+        $this->assertSame(0, $pending);
+
+        // Permintaan baru → masuk daftar pending dashboard
+        $trx = app(EwalletService::class)->buatPermintaanTopup($user->id, 50000, 'transfer_bri');
+
         $data = (new DashboardPpob)->getViewData();
-        $this->assertSame(1, $data['ewalletStats']['pending']);
-        $this->assertCount(1, $data['ewalletPending']);
+        $this->assertContains($trx->id, $data['ewalletPending']->pluck('id')->all());
     }
 
     public function test_admin_menyetujui_topup_dari_dashboard(): void
@@ -439,5 +446,73 @@ class EwalletTest extends TestCase
 
         $this->postJson('/api/payment/midtrans/notify', $this->notifikasi('PPOB-20260101-XXXX', 'capture'))
             ->assertOk();
+    }
+
+    /* ─────────── Topup manual: persetujuan admin opsional ─────────── */
+
+    public function test_bukti_transfer_menunggu_admin_secara_default(): void
+    {
+        $user = $this->anggota();
+        Sanctum::actingAs($user, ['*']);
+
+        $trx = $this->topupManual($user, 90000);
+
+        $this->postJson('/api/anggota/ewallet/bukti', [
+            'id'    => $trx->id,
+            'bukti' => UploadedFile::fake()->image('bukti.jpg'),
+        ])->assertOk()->assertJsonPath('status', 'pending');
+
+        $this->assertSame('pending', $trx->fresh()->status);
+        $this->assertNotNull($trx->fresh()->bukti_transfer);
+        $this->assertSame(0.0, (float) app(EwalletService::class)->saldo($user->id));
+    }
+
+    public function test_bukti_transfer_langsung_kredit_bila_auto_approve_aktif(): void
+    {
+        config(['services.topup.auto_approve_manual' => true]);
+
+        $user = $this->anggota();
+        Sanctum::actingAs($user, ['*']);
+
+        $trx = $this->topupManual($user, 120000);
+
+        $this->postJson('/api/anggota/ewallet/bukti', [
+            'id'    => $trx->id,
+            'bukti' => UploadedFile::fake()->image('bukti.jpg'),
+        ])
+            ->assertOk()
+            ->assertJsonPath('status', 'sukses')
+            ->assertJsonPath('saldo', 120000);
+
+        $this->assertSame(120000.0, (float) app(EwalletService::class)->saldo($user->id));
+        $this->assertSame(0, $this->pendingTopupCount($user));
+    }
+
+    public function test_respons_topup_meny_diinformasi_auto_approve(): void
+    {
+        $user = $this->anggota();
+        Sanctum::actingAs($user, ['*']);
+
+        // Default .env: middleware approval
+        $this->getJson('/api/anggota/ewallet')->assertJsonPath('data.auto_approve', false);
+
+        config(['services.topup.auto_approve_manual' => true]);
+        $this->getJson('/api/anggota/ewallet')->assertJsonPath('data.auto_approve', true);
+    }
+
+    private function topupManual(User $user, float $nominal): EwalletTransaction
+    {
+        $trx = app(EwalletService::class)->buatPermintaanTopup($user->id, $nominal, 'transfer_bca');
+        $trx->forceFill(['gateway' => 'manual', 'kode_va' => '88991234'])->save();
+
+        return $trx;
+    }
+
+    private function pendingTopupCount(User $user): int
+    {
+        return EwalletTransaction::where('id_anggota', $user->id)
+            ->where('tipe', 'topup')
+            ->where('status', 'pending')
+            ->count();
     }
 }

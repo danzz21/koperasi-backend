@@ -508,7 +508,7 @@
                         <tr>
                             <th>Anggota</th>
                             <th>Nominal</th>
-                            <th>Kanal / VA</th>
+                            <th>Kanal / Ref</th>
                             <th>Waktu</th>
                             <th style="text-align:center;">Aksi</th>
                         </tr>
@@ -530,7 +530,7 @@
                                 </div>
                                 @if($tp->kode_va)
                                     <div style="font-family:ui-monospace,Menlo,monospace;font-size:.68rem;font-weight:800;color:#6d28d9;">
-                                        VA {{ $tp->kode_va }}
+                                        Ref {{ $tp->kode_va }}
                                     </div>
                                 @endif
                                 @if($tp->bukti_transfer)

@@ -109,8 +109,15 @@ class CoseKey
             throw new RuntimeException('Kurva COSE tidak dikenal.');
         }
 
-        $x = (string) ($this->coseKey[-2] ?? '');
-        $y = (string) ($this->coseKey[-3] ?? '');
+        // Panjang koordinat tiap kurva (P-256=32, P-384=48, P-521=66)
+        $size = match ($curve) {
+            1 => 32,
+            2 => 48,
+            default => 66,
+        };
+
+        $x = $this->normalizeCoordinate((string) ($this->coseKey[-2] ?? ''), $size, 'X');
+        $y = $this->normalizeCoordinate((string) ($this->coseKey[-3] ?? ''), $size, 'Y');
 
         if ($x === '' || $y === '') {
             throw new RuntimeException('Koordinat public key EC tidak lengkap.');
@@ -123,6 +130,24 @@ class CoseKey
 
         // ECPoint: 0x04 || X || Y, dibungkus BIT STRING
         return Der::sequence($algorithm.Der::bitString("\x04".$x.$y));
+    }
+
+    /**
+     * Samakan panjang koordinat dengan ukuran kurva.
+     *
+     * OpenSSL kadang mengembalikan koordinat 33/49 byte (dengan byte nol di
+     * depan). Tanpa normalisasi, titik uncompressed jadi salah ukuran dan
+     * openssl_pkey_get_public() menolak.
+     */
+    private function normalizeCoordinate(string $value, int $size, string $label): string
+    {
+        $value = ltrim($value, "\x00");
+
+        if (strlen($value) > $size) {
+            throw new RuntimeException("Koordinat EC {$label} melebihi ukuran kurva.");
+        }
+
+        return str_pad($value, $size, "\x00", STR_PAD_LEFT);
     }
 
     private function rsaDer(): string

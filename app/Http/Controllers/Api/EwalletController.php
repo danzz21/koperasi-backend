@@ -66,6 +66,7 @@ class EwalletController extends Controller
                     ->where('status', 'sukses')->sum('nominal'),
                 'simpanan_tersedia' => $this->simpananTersedia($id),
                 'gateway_aktif'     => $this->midtrans->isConfigured(),
+                'auto_approve'      => (bool) config('services.topup.auto_approve_manual', false),
                 'rekening'          => config('services.midtrans.bank_manual'),
             ],
         ]);
@@ -243,9 +244,23 @@ class EwalletController extends Controller
 
         $this->ewallet->lampirkanBukti($trx, $path);
 
+        // Bila TOPUP_AUTO_APPROVE_MANUAL=true, saldo langsung bertambah
+        // tanpa persetujuan admin (uang sudah diterima kasir / bank).
+        if (config('services.topup.auto_approve_manual', false) && $trx->fresh()->status === 'pending') {
+            $trx = $this->ewallet->kreditkanTopup($trx, 'Bukti transfer terverifikasi otomatis');
+
+            return response()->json([
+                'message' => 'Bukti diterima. Saldo E-Wallet langsung ditambahkan.',
+                'bukti'   => $trx->bukti_transfer,
+                'status'  => $trx->status,
+                'saldo'   => $this->ewallet->saldo((int) $request->user()->id),
+            ]);
+        }
+
         return response()->json([
             'message' => 'Bukti transfer terkirim. Admin akan memverifikasi dalam waktu dekat.',
             'bukti'   => $trx->fresh()->bukti_transfer,
+            'status'  => $trx->fresh()->status,
         ]);
     }
 

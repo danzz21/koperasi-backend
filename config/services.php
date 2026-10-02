@@ -43,6 +43,22 @@ return [
     |          diambil dari header Origin, mis. "localhost" atau "app.domain.com".
     | origins: daftar origin yang diizinkan, pisahkan dengan koma.
     */
+    /*
+    |--------------------------------------------------------------------------
+    | Topup E-Wallet
+    |--------------------------------------------------------------------------
+    | auto_approve_manual:
+    |   true  → unggah bukti transfer langsung menambah saldo (cocok kalau ada
+    |           kasir/kas cooperative yang sudah menerima uang, atau bank
+    |           mengirim mutasi otomatis ke sistem).
+    |   false → bukti hanya disimpan, saldo menunggu verifikasi admin
+    |           (default, lebih aman untuk transfer yang masuk lewat bank
+    |           tanpa notifikasi otomatis).
+    */
+    'topup' => [
+        'auto_approve_manual' => env('TOPUP_AUTO_APPROVE_MANUAL', false),
+    ],
+
     'webauthn' => [
         'rp_id'   => env('WEBAUTHN_RP_ID'),
         'rp_name' => env('WEBAUTHN_RP_NAME', 'K-Samara'),
