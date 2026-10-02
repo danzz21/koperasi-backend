@@ -21,6 +21,11 @@ class EwalletTransaction extends Model
         'status',
         'nominal',
         'metode',
+        'gateway',
+        'kode_va',
+        'payment_url',
+        'bukti_transfer',
+        'expired_at',
         'ref_id',
         'balance_after',
         'keterangan',
@@ -29,6 +34,7 @@ class EwalletTransaction extends Model
     protected $casts = [
         'nominal'       => 'decimal:2',
         'balance_after' => 'decimal:2',
+        'expired_at'    => 'datetime',
     ];
 
     public function anggota(): BelongsTo

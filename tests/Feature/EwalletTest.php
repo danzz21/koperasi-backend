@@ -4,11 +4,14 @@ namespace Tests\Feature;
 
 use App\Filament\Pages\DashboardPpob;
 use App\Models\EwalletTransaction;
+use App\Models\Simpanan;
 use App\Support\EwalletService;
+use App\Support\MidtransService;
 use App\Models\User;
 use Filament\Facades\Filament;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
 use Laravel\Sanctum\Sanctum;
 use Livewire\Livewire;
 use Tests\TestCase;
@@ -237,5 +240,204 @@ class EwalletTest extends TestCase
             'Dashboard PPOB gagal dengan HTTP '.$response->getStatusCode()
         );
         $response->assertSee('Tracking E-Wallet');
+    }
+
+    /* ─────────────────── Topup dari simpanan sendiri (instan) ─────────────────── */
+
+    private function simpanan(User $user, string $jenis, float $nominal): Simpanan
+    {
+        return Simpanan::create([
+            'id_anggota' => $user->id,
+            'jenis'     => $jenis,
+            'nominal'   => $nominal,
+            'bunga'     => 0,
+            'status'    => 'aktif',
+        ]);
+    }
+
+    public function test_pindah_dari_simpanan_menambah_saldo_seketika(): void
+    {
+        $user = $this->anggota();
+        $this->simpanan($user, 'sukarela', 400000);
+        Sanctum::actingAs($user, ['*']);
+
+        $this->postJson('/api/anggota/ewallet/pindah', ['nominal' => 150000, 'jenis' => 'sukarela'])
+            ->assertCreated()
+            ->assertJsonPath('data.saldo', 150000);
+
+        // Simpanan berkurang, saldo e-wallet bertambah
+        $this->assertSame(250000.0, (float) $this->simpananTersedia($user, 'sukarela'));
+
+        $mutasi = EwalletTransaction::where('id_anggota', $user->id)->where('tipe', 'pindah')->first();
+        $this->assertSame('sukses', $mutasi->status);
+        $this->assertSame(150000.0, (float) $mutasi->nominal);
+    }
+
+    public function test_pindah_dari_simpanan_menggunakan_antrean_fifo(): void
+    {
+        $user = $this->anggota();
+        $lama = $this->simpanan($user, 'sukarela', 100000);
+        $baru = $this->simpanan($user, 'sukarela', 200000);
+        Sanctum::actingAs($user, ['*']);
+
+        $this->postJson('/api/anggota/ewallet/pindah', ['nominal' => 150000, 'jenis' => 'sukarela'])
+            ->assertCreated();
+
+        $this->assertSame(0.0, (float) $lama->fresh()->nominal);
+        $this->assertSame(150000.0, (float) $baru->fresh()->nominal);
+    }
+
+    public function test_pindah_ditolak_bila_saldo_simpanan_kurang(): void
+    {
+        $user = $this->anggota();
+        $this->simpanan($user, 'sukarela', 30000);
+        Sanctum::actingAs($user, ['*']);
+
+        $this->postJson('/api/anggota/ewallet/pindah', ['nominal' => 75000, 'jenis' => 'sukarela'])
+            ->assertUnprocessable()
+            ->assertJsonPath('tersedia', 30000);
+
+        $this->assertSame(0.0, (float) app(EwalletService::class)->saldo($user->id));
+    }
+
+    private function simpananTersedia(User $user, string $jenis): float
+    {
+        return (float) DB::table('simpanans')
+            ->where('id_anggota', $user->id)
+            ->where('jenis', $jenis)
+            ->where('status', 'aktif')
+            ->sum('nominal');
+    }
+
+    /* ─────────────────── Payment Gateway (Midtrans) ─────────────────── */
+
+    /** Aktifkan Midtrans dengan server key palsu (dalam sandbox). */
+    private function aktifkanMidtrans(): void
+    {
+        config([
+            'services.midtrans.enabled'     => true,
+            'services.midtrans.server_key'  => 'SB-Mid-server-TESTKEY123',
+            'services.midtrans.api_url'     => 'https://api.sandbox.midtrans.com/v2',
+        ]);
+    }
+
+    private function notifikasi(string $orderId, string $status, string $statusCode = '200', string $amount = '100000'): array
+    {
+        $key = (string) config('services.midtrans.server_key');
+
+        return [
+            'order_id'           => $orderId,
+            'transaction_status' => $status,
+            'status_code'        => $statusCode,
+            'gross_amount'       => $amount,
+            'payment_type'       => 'bank_transfer',
+            'fraud_status'       => 'accept',
+            'signature_key'      => hash('sha512', $orderId.$statusCode.$amount.$key),
+        ];
+    }
+
+    public function test_topup_qris_menolak_saat_gateway_belum_dikonfigurasi(): void
+    {
+        Sanctum::actingAs($this->anggota(), ['*']);
+
+        // .env masih memakai placeholder → gateway belum aktif
+        $this->assertFalse(app(MidtransService::class)->isConfigured());
+
+        $this->postJson('/api/anggota/ewallet/topup', ['nominal' => 50000, 'metode' => 'midtrans_qris'])
+            ->assertStatus(503);
+    }
+
+    public function test_charge_qris_membuat_permintaan_dengan_payment_url(): void
+    {
+        $this->aktifkanMidtrans();
+        Http::fake([
+            '*' => Http::response([
+                'token'        => 'abc-token-123',
+                'redirect_url' => 'https://app.midtrans.com/snap/abc-token-123',
+                'actions'      => [
+                    ['name' => 'qr_string', 'value' => '00020101BRID1234'],
+                ],
+                'expiry_time'  => '2026-01-01 10:00:00',
+            ], 201),
+        ]);
+
+        $user = $this->anggota();
+        Sanctum::actingAs($user, ['*']);
+
+        $this->postJson('/api/anggota/ewallet/topup', ['nominal' => 100000, 'metode' => 'midtrans_qris'])
+            ->assertCreated()
+            ->assertJsonPath('data.gateway', 'midtrans')
+            ->assertJsonPath('data.payment_url', 'https://app.midtrans.com/snap/abc-token-123')
+            ->assertJsonPath('data.qris_string', '00020101BRID1234');
+
+        $this->assertSame(0.0, (float) app(EwalletService::class)->saldo($user->id));
+    }
+
+    public function test_webhook_menolak_signature_salah(): void
+    {
+        $this->aktifkanMidtrans();
+
+        $payload = $this->notifikasi('TOPUP-123', 'capture');
+        $payload['signature_key'] = 'signature-palsu';
+
+        $this->postJson('/api/payment/midtrans/notify', $payload)->assertForbidden();
+    }
+
+    public function test_webhook_kreditkan_saldo_dan_hanya_sekali(): void
+    {
+        $this->aktifkanMidtrans();
+
+        $user = $this->anggota();
+        $trx  = app(EwalletService::class)->buatPermintaanTopup($user->id, 100000, 'midtrans_qris');
+        $trx->forceFill(['gateway' => 'midtrans'])->save();
+
+        $payload = $this->notifikasi($trx->ref_id, 'capture', '200', '100000');
+
+        $this->postJson('/api/payment/midtrans/notify', $payload)->assertOk();
+
+        $this->assertSame(100000.0, (float) app(EwalletService::class)->saldo($user->id));
+        $this->assertSame('sukses', $trx->fresh()->status);
+
+        // Notifikasi berulang tidak boleh menambah saldo lagi
+        $this->postJson('/api/payment/midtrans/notify', $payload)->assertOk();
+        $this->assertSame(100000.0, (float) app(EwalletService::class)->saldo($user->id));
+    }
+
+    public function test_webhook_status_pending_tidak_mengubah_saldo(): void
+    {
+        $this->aktifkanMidtrans();
+
+        $user = $this->anggota();
+        $trx  = app(EwalletService::class)->buatPermintaanTopup($user->id, 75000, 'va_bca');
+        $trx->forceFill(['gateway' => 'midtrans'])->save();
+
+        $this->postJson('/api/payment/midtrans/notify', $this->notifikasi($trx->ref_id, 'pending', '201', '75000'))
+            ->assertOk();
+
+        $this->assertSame('pending', $trx->fresh()->status);
+        $this->assertSame(0.0, (float) app(EwalletService::class)->saldo($user->id));
+    }
+
+    public function test_webhook_status_gagal_menandai_topup_gagal(): void
+    {
+        $this->aktifkanMidtrans();
+
+        $user = $this->anggota();
+        $trx  = app(EwalletService::class)->buatPermintaanTopup($user->id, 60000, 'va_bni');
+        $trx->forceFill(['gateway' => 'midtrans'])->save();
+
+        $this->postJson('/api/payment/midtrans/notify', $this->notifikasi($trx->ref_id, 'expire', '404', '60000'))
+            ->assertOk();
+
+        $this->assertSame('gagal', $trx->fresh()->status);
+        $this->assertSame(0.0, (float) app(EwalletService::class)->saldo($user->id));
+    }
+
+    public function test_webhook_abaikan_order_yang_bukan_topup_ewallet(): void
+    {
+        $this->aktifkanMidtrans();
+
+        $this->postJson('/api/payment/midtrans/notify', $this->notifikasi('PPOB-20260101-XXXX', 'capture'))
+            ->assertOk();
     }
 }

@@ -508,8 +508,7 @@
                         <tr>
                             <th>Anggota</th>
                             <th>Nominal</th>
-                            <th>Metode</th>
-                            <th>Keterangan</th>
+                            <th>Kanal / VA</th>
                             <th>Waktu</th>
                             <th style="text-align:center;">Aksi</th>
                         </tr>
@@ -522,8 +521,24 @@
                                 <div style="font-size:.62rem;color:#9ca3af;">{{ $tp->anggota?->username }}</div>
                             </td>
                             <td style="font-weight:800;color:#059669;">Rp {{ number_format($tp->nominal, 0, ',', '.') }}</td>
-                            <td style="font-size:.7rem;text-transform:capitalize;color:#4b5563;">{{ str_replace('_',' ',$tp->metode ?: 'Transfer Bank') }}</td>
-                            <td style="font-size:.7rem;color:#6b7280;max-width:160px;">{{ $tp->keterangan ?: '-' }}</td>
+                            <td>
+                                <span style="font-size:.62rem;font-weight:800;padding:.15rem .4rem;border-radius:.35rem;background:{{ $tp->gateway === 'midtrans' ? '#ede9fe' : '#e0f2fe' }};color:{{ $tp->gateway === 'midtrans' ? '#6d28d9' : '#0369a1' }};text-transform:uppercase;">
+                                    {{ $tp->gateway === 'midtrans' ? 'Gateway' : 'Manual' }}
+                                </span>
+                                <div style="font-size:.66rem;color:#4b5563;margin-top:.2rem;text-transform:capitalize;">
+                                    {{ str_replace('_',' ',$tp->metode ?: 'Transfer Bank') }}
+                                </div>
+                                @if($tp->kode_va)
+                                    <div style="font-family:ui-monospace,Menlo,monospace;font-size:.68rem;font-weight:800;color:#6d28d9;">
+                                        VA {{ $tp->kode_va }}
+                                    </div>
+                                @endif
+                                @if($tp->bukti_transfer)
+                                    <a href="{{ \Illuminate\Support\Str::startsWith($tp->bukti_transfer, 'http') ? $tp->bukti_transfer : asset('storage/'.$tp->bukti_transfer) }}"
+                                       target="_blank" rel="noopener"
+                                       style="font-size:.65rem;font-weight:800;color:#2563eb;text-decoration:underline;">Lihat Bukti</a>
+                                @endif
+                            </td>
                             <td style="font-size:.68rem;color:#9ca3af;white-space:nowrap;">{{ $tp->created_at->format('d M Y H:i') }}</td>
                             <td style="text-align:center;">
                                 <div style="display:flex;gap:.35rem;justify-content:center;">

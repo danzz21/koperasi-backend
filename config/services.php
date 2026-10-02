@@ -7,6 +7,19 @@ return [
         'is_production' => env('MIDTRANS_IS_PRODUCTION', false),
         'snap_url' => env('MIDTRANS_SNAP_URL', 'https://app.sandbox.midtrans.com/snap/v1/transactions'),
         'snap_js' => env('MIDTRANS_SNAP_JS', 'https://app.sandbox.midtrans.com/snap/snap.js'),
+        // Endpoint RESTful untuk membuat charge QRIS / Virtual Account
+        'api_url' => env(
+            'MIDTRANS_API_URL',
+            'https://api.sandbox.midtrans.com/v2'
+        ),
+        // Master switch integrasi topup e-wallet via Midtrans
+        'enabled' => env('MIDTRANS_ENABLED', true),
+        // Rekening koperasi untuk topup manual (diverifikasi admin)
+        'bank_manual' => [
+            'bank'    => env('KOPERASI_BANK', 'BCA'),
+            'nomor'   => env('KOPERASI_REKENING', '0000000000'),
+            'atas'    => env('KOPERASI_REKENING_ATAS', 'Koperasi K-Samara'),
+        ],
     ],
 
     'digiflazz' => [

@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\PinjamanController;
 use App\Http\Controllers\Api\CicilanController;
 use App\Http\Controllers\Api\EwalletController;
 use App\Http\Controllers\Api\OnboardingController;
+use App\Http\Controllers\Api\PaymentNotificationController;
 use App\Http\Controllers\Api\ProfilController;
 use App\Http\Controllers\Api\PpobController;
 use App\Http\Controllers\Api\PaymentGatewayController;
@@ -45,6 +46,12 @@ Route::prefix('auth')->group(function () {
         Route::post('login/options',     [PasskeyAuthController::class, 'loginOptions']);
         Route::post('login/verify',      [PasskeyAuthController::class, 'loginVerify']);
     });
+});
+
+// ── Webhook Payment Gateway (dipanggil Midtrans, tanpa auth) ───────────────
+Route::prefix('payment/midtrans')->group(function () {
+    Route::post('notify', [PaymentNotificationController::class, 'midtrans'])
+        ->name('payment.midtrans.notify');
 });
 
 // ── Authenticated Routes ────────────────────────────────────────────────────
@@ -137,6 +144,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
             Route::get('/',       [EwalletController::class, 'index']);
             Route::get('riwayat', [EwalletController::class, 'riwayat']);
             Route::post('topup',  [EwalletController::class, 'topup']);
+            Route::post('pindah', [EwalletController::class, 'pindah']);
+            Route::post('bukti',  [EwalletController::class, 'bukti']);
         });
     });
 

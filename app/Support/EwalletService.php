@@ -3,8 +3,10 @@
 namespace App\Support;
 
 use App\Exceptions\InsufficientBalanceException;
+use App\Exceptions\InsufficientSavingsException;
 use App\Models\Ewallet;
 use App\Models\EwalletTransaction;
+use App\Models\Simpanan;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -133,5 +135,135 @@ class EwalletService
             ['id_anggota' => $idAnggota],
             ['saldo'      => 0],
         );
+    }
+
+    /**
+     * Pindahkan saldo simpanan anggota ke E-Wallet (instan, tanpa admin).
+     *
+     * Pemotongan memakai antrean FIFO: saldo yang paling lama masuk dipakai
+     * lebih dulu supaya riwayatnya tetap masuk akal.
+     *
+     * @throws InsufficientSavingsException
+     */
+    public function pindahDariSimpanan(int $idAnggota, float $nominal, string $jenis = 'sukarela'): EwalletTransaction
+    {
+        return DB::transaction(function () use ($idAnggota, $nominal, $jenis) {
+            $rows = Simpanan::where('id_anggota', $idAnggota)
+                ->where('jenis', $jenis)
+                ->where('status', 'aktif')
+                ->orderBy('created_at')
+                ->lockForUpdate()
+                ->get();
+
+            $tersedia = (float) $rows->sum('nominal');
+
+            if ($tersedia < $nominal) {
+                throw new InsufficientSavingsException(
+                    $tersedia,
+                    $nominal,
+                    'Saldo simpanan '.$jenis.' kamu hanya Rp '.number_format($tersedia, 0, ',', '.')
+                        .', tidak cukup untuk dipindahkan Rp '.number_format($nominal, 0, ',', '.').'.',
+                );
+            }
+
+            $sisa = $nominal;
+
+            foreach ($rows as $row) {
+                if ($sisa <= 0) {
+                    break;
+                }
+
+                $potong     = min((float) $row->nominal, $sisa);
+                $row->nominal = (float) $row->nominal - $potong;
+                $row->save();
+
+                $sisa -= $potong;
+            }
+
+            $wallet    = $this->wallet($idAnggota);
+            $saldoBaru = (float) $wallet->saldo + $nominal;
+
+            $wallet->saldo = $saldoBaru;
+            $wallet->save();
+
+            return EwalletTransaction::create([
+                'id_anggota'    => $idAnggota,
+                'tipe'          => 'pindah',
+                'status'        => 'sukses',
+                'nominal'       => $nominal,
+                'metode'        => 'simpanan_'.$jenis,
+                'gateway'       => 'internal',
+                'ref_id'        => $this->refId('PINDOH'),
+                'balance_after' => $saldoBaru,
+                'keterangan'    => 'Pindah dari Simpanan '.ucfirst($jenis).' ke E-Wallet',
+            ]);
+        });
+    }
+
+    /**
+     * Kreditkan topup otomatis (dipanggil webhook payment gateway).
+     * Idempoten: transaksi yang sudah berstatus 'sukses' tidak diubah lagi.
+     */
+    public function kreditkanTopup(EwalletTransaction $trx, ?string $catatan = null): EwalletTransaction
+    {
+        return DB::transaction(function () use ($trx, $catatan) {
+            if ($trx->status === 'sukses') {
+                return $trx;
+            }
+
+            $wallet    = $this->wallet((int) $trx->id_anggota);
+            $saldoBaru = (float) $wallet->saldo + (float) $trx->nominal;
+
+            $wallet->saldo = $saldoBaru;
+            $wallet->save();
+
+            $trx->forceFill([
+                'status'        => 'sukses',
+                'balance_after' => $saldoBaru,
+                'keterangan'    => $trx->keterangan
+                    ?: 'Topup E-Wallet otomatis'.($catatan ? ' ('.$catatan.')' : ''),
+            ])->save();
+
+            return $trx;
+        });
+    }
+
+    /** Tandai topup gagal (kedaluwarsa / ditolak bank). */
+    public function gagalkanTopup(EwalletTransaction $trx, ?string $alasan = null): EwalletTransaction
+    {
+        if ($trx->status === 'sukses') {
+            return $trx;
+        }
+
+        $trx->forceFill([
+            'status'        => 'gagal',
+            'balance_after' => (float) $this->wallet((int) $trx->id_anggota)->saldo,
+            'keterangan'    => $alasan ? $trx->keterangan.' — '.$alasan : $trx->keterangan,
+        ])->save();
+
+        return $trx;
+    }
+
+    /** Simpan bukti transfer yang diunggah anggota. */
+    public function lampirkanBukti(EwalletTransaction $trx, string $path): EwalletTransaction
+    {
+        $trx->forceFill(['bukti_transfer' => $path])->save();
+
+        return $trx;
+    }
+
+    /** Nomor virtual account unik untuk topup manual per permintaan. */
+    public function kodeVaUnik(): string
+    {
+        do {
+            $kode = '88'.random_int(100000000, 999999999);
+        } while (EwalletTransaction::where('kode_va', $kode)->exists());
+
+        return $kode;
+    }
+
+    private function refId(string $prefix): string
+    {
+        return $prefix.'-'.now()->format('ymdHis').'-'.strtoupper(substr(uniqid(), -4));
     }
 }
