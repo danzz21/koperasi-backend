@@ -213,7 +213,9 @@ class PasskeyAuthController extends Controller
             return response()->json(['message' => 'Akun tidak ditemukan.'], 404);
         }
 
-        if (in_array($user->status, ['pending', 'rejected'], true)) {
+        // 'nonaktif' = dinonaktifkan admin, 'pending' = belum diverifikasi,
+        // 'rejected' = pendaftaran ditolak
+        if (in_array($user->status, ['nonaktif', 'pending', 'rejected'], true)) {
             return response()->json(['message' => 'Akun Anda belum aktif. Hubungi admin koperasi.'], 403);
         }
 

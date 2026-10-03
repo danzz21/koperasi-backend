@@ -2,7 +2,10 @@
 
 namespace App\Filament\Resources\Users\Schemas;
 
+use App\Models\User;
+use App\Support\MemberAccountActions;
 use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
@@ -67,6 +70,46 @@ class UserForm
                     ->options(['pending' => 'Pending', 'aktif' => 'Aktif', 'nonaktif' => 'Nonaktif'])
                     ->default('pending')
                     ->required(),
+
+                /* ── Ringkasan hanya muncul di mode "Lihat Detail" ── */
+                Placeholder::make('ringkasan_simpanan')
+                    ->label('Total Simpanan Aktif')
+                    ->columnSpanFull()
+                    ->visible(fn (string $operation): bool => $operation === 'view')
+                    ->content(fn (?User $record): string => $record
+                        ? 'Rp '.number_format(MemberAccountActions::summary($record)['total_simpanan'], 0, ',', '.')
+                            .' (pokok Rp '.number_format(MemberAccountActions::summary($record)['simpanan_pokok'], 0, ',', '.')
+                            .' · wajib Rp '.number_format(MemberAccountActions::summary($record)['simpanan_wajib'], 0, ',', '.')
+                            .' · sukarela Rp '.number_format(MemberAccountActions::summary($record)['simpanan_sukarela'], 0, ',', '.').')'
+                        : '-'),
+
+                Placeholder::make('ringkasan_ewallet')
+                    ->label('Saldo E-Wallet')
+                    ->visible(fn (string $operation): bool => $operation === 'view')
+                    ->content(fn (?User $record): string => $record
+                        ? 'Rp '.number_format(MemberAccountActions::summary($record)['saldo_ewallet'], 0, ',', '.')
+                        : '-'),
+
+                Placeholder::make('ringkasan_pinjaman')
+                    ->label('Pinjaman Aktif')
+                    ->visible(fn (string $operation): bool => $operation === 'view')
+                    ->content(fn (?User $record): string => $record
+                        ? MemberAccountActions::summary($record)['pinjaman_aktif'].' akad berjalan'
+                        : '-'),
+
+                Placeholder::make('ringkasan_perangkat')
+                    ->label('Perangkat Passkey')
+                    ->visible(fn (string $operation): bool => $operation === 'view')
+                    ->content(fn (?User $record): string => $record
+                        ? MemberAccountActions::summary($record)['jumlah_passkey'].' perangkat terdaftar'
+                        : '-'),
+
+                Placeholder::make('sumber_akun')
+                    ->label('Sumber Akun')
+                    ->visible(fn (string $operation): bool => $operation === 'view')
+                    ->content(fn (?User $record): string => $record?->google_id
+                        ? 'Login Google ('.$record->email.')'
+                        : 'Pendaftaran formulir'),
             ]);
     }
 }

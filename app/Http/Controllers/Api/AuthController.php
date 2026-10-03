@@ -39,8 +39,9 @@ class AuthController extends Controller
             return response()->json(['message' => 'Akun Anda belum diverifikasi oleh admin.'], 403);
         }
 
-        if ($user->status === 'rejected') {
-            return response()->json(['message' => 'Akun Anda ditolak oleh admin.'], 403);
+        // 'nonaktif' = akun dinonaktifkan oleh admin, 'rejected' = pendaftaran ditolak
+        if (in_array($user->status, ['nonaktif', 'rejected'], true)) {
+            return response()->json(['message' => 'Akun Anda dinonaktifkan oleh admin.'], 403);
         }
 
         // Revoke token lama

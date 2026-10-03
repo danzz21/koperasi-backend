@@ -19,13 +19,24 @@ class EnsureProfileCompleted
     {
         $user = $request->user();
 
-        if ($user && $user->requiresProfileCompletion()) {
-            return response()->json([
-                'message'          => 'Lengkapi data profil Anda terlebih dahulu sebelum menggunakan fitur ini.',
-                'code'             => 'PROFILE_INCOMPLETE',
-                'needs_onboarding' => true,
-                'missing_fields'   => $user->missingProfileFields(),
-            ], 403);
+        if ($user) {
+            // Akun dinonaktifkan oleh admin → blokir semua endpoint anggota,
+            // termasuk kalau masih ada token lama di perangkat.
+            if (in_array($user->status, ['nonaktif', 'rejected'], true)) {
+                return response()->json([
+                    'message' => 'Akun Anda dinonaktifkan oleh admin.',
+                    'code'    => 'ACCOUNT_DISABLED',
+                ], 403);
+            }
+
+            if ($user->requiresProfileCompletion()) {
+                return response()->json([
+                    'message'        => 'Lengkapi data profil Anda terlebih dahulu sebelum menggunakan fitur ini.',
+                    'code'           => 'PROFILE_INCOMPLETE',
+                    'needs_onboarding' => true,
+                    'missing_fields' => $user->missingProfileFields(),
+                ], 403);
+            }
         }
 
         return $next($request);

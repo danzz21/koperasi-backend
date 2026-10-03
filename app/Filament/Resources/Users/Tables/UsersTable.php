@@ -2,9 +2,15 @@
 
 namespace App\Filament\Resources\Users\Tables;
 
+use App\Models\User;
+use App\Support\MemberAccountActions;
+use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
+use Filament\Actions\ViewAction;
+use Filament\Notifications\Notification;
 use Filament\Tables\Columns\BadgeColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
@@ -76,9 +82,69 @@ class UsersTable
                     ]),
             ])
             ->recordActions([
+                ViewAction::make()
+                    ->label('Detail')
+                    ->icon('heroicon-m-eye'),
+
                 EditAction::make()
                     ->label('Edit')
                     ->icon('heroicon-m-pencil-square'),
+
+                Action::make('resetPassword')
+                    ->label('Reset Password')
+                    ->icon('heroicon-m-key')
+                    ->color('warning')
+                    ->requiresConfirmation()
+                    ->modalHeading('Reset password anggota?')
+                    ->modalDescription('Password diubah ke "'.MemberAccountActions::DEFAULT_PASSWORD.'" dan anggota harus login ulang di semua perangkat.')
+                    ->modalSubmitActionLabel('Ya, reset')
+                    ->action(function (User $record): void {
+                        MemberAccountActions::resetPassword($record);
+
+                        Notification::make()
+                            ->warning()
+                            ->title('Password direset')
+                            ->body('Password '.$record->nama_lengkap.' sekarang "'.MemberAccountActions::DEFAULT_PASSWORD.'". '
+                                .'Minta anggota segera menggantinya.')
+                            ->send();
+                    }),
+
+                Action::make('nonaktifkan')
+                    ->label('Nonaktifkan')
+                    ->icon('heroicon-m-no-symbol')
+                    ->color('danger')
+                    ->requiresConfirmation()
+                    ->modalHeading('Nonaktifkan anggota ini?')
+                    ->modalDescription('Anggota tidak bisa login sampai diaktifkan kembali.')
+                    ->visible(fn (User $record): bool => $record->status === 'aktif')
+                    ->action(function (User $record): void {
+                        MemberAccountActions::setActive($record, false);
+
+                        Notification::make()->danger()->title('Akun dinonaktifkan')->send();
+                    }),
+
+                Action::make('aktifkan')
+                    ->label('Aktifkan')
+                    ->icon('heroicon-m-check-circle')
+                    ->color('success')
+                    ->requiresConfirmation()
+                    ->modalHeading('Aktifkan anggota ini?')
+                    ->visible(fn (User $record): bool => $record->status !== 'aktif')
+                    ->action(function (User $record): void {
+                        MemberAccountActions::setActive($record, true);
+
+                        Notification::make()->success()->title('Akun diaktifkan')->send();
+                    }),
+
+                DeleteAction::make()
+                    ->label('Hapus')
+                    ->modalHeading('Hapus anggota ini?')
+                    ->modalDescription('Data anggota, simpanan, pinjaman, dan e-wallet-nya ikut terhapus. Tindakan ini tidak dapat dibatalkan.')
+                    ->action(function (User $record): void {
+                        MemberAccountActions::delete($record);
+
+                        Notification::make()->success()->title('Anggota dihapus')->send();
+                    }),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
