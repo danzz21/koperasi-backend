@@ -2,7 +2,7 @@
 
 namespace App\Filament\Pages;
 
-use App\Support\PendingApprovalActions;
+use App\Services\PendingApprovalActions;
 use App\Support\PendingApprovals;
 use Filament\Tables\Columns\TextColumn;
 use Illuminate\Database\Eloquent\Builder;

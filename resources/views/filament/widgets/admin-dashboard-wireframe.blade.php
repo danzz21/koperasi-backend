@@ -183,8 +183,10 @@
                     ['url' => \App\Filament\Pages\PendingAnggota::getUrl(), 'label' => 'Anggota Baru', 'note' => 'Verifikasi pendaftaran', 'count' => $pendingAnggota, 'bg' => '#d1fae5', 'ic' => '#059669', 'ac' => '#059669', 'hb' => '#ecfdf5', 'hbBorder' => '#a7f3d0'],
                     ['url' => \App\Filament\Pages\PendingSukarela::getUrl(), 'label' => 'Simpanan Sukarela', 'note' => 'Konfirmasi setoran', 'count' => $pendingSukarela, 'bg' => '#dbeafe', 'ic' => '#2563eb', 'ac' => '#3b82f6', 'hb' => '#eff6ff', 'hbBorder' => '#bfdbfe'],
                     ['url' => \App\Filament\Pages\PendingSimpananPokok::getUrl(), 'label' => 'Simpanan Pokok', 'note' => 'Verifikasi pokok awal', 'count' => $pendingPokok, 'bg' => '#e0e7ff', 'ic' => '#4f46e5', 'ac' => '#6366f1', 'hb' => '#eef2ff', 'hbBorder' => '#c7d2fe'],
+                    ['url' => \App\Filament\Pages\PendingSimpananWajib::getUrl(), 'label' => 'Simpanan Wajib', 'note' => 'Verifikasi setoran', 'count' => $pendingWajib, 'bg' => '#ccfbf1', 'ic' => '#0f766e', 'ac' => '#14b8a6', 'hb' => '#f0fdfa', 'hbBorder' => '#99f6e4'],
                     ['url' => \App\Filament\Pages\PendingPinjaman::getUrl(), 'label' => 'Pengajuan Pinjaman', 'note' => 'Persetujuan akad', 'count' => $pendingPinjaman, 'bg' => '#fef3c7', 'ic' => '#d97706', 'ac' => '#f59e0b', 'hb' => '#fffbeb', 'hbBorder' => '#fde68a'],
                     ['url' => \App\Filament\Pages\PendingPembayaran::getUrl(), 'label' => 'Pembayaran Cicilan', 'note' => 'Setoran angsuran', 'count' => $pendingBayar, 'bg' => '#ede9fe', 'ic' => '#7c3aed', 'ac' => '#a855f7', 'hb' => '#f5f3ff', 'hbBorder' => '#ddd6fe'],
+                    ['url' => \App\Filament\Pages\PendingWithdrawalRequests::getUrl(), 'label' => 'Pengunduran Diri', 'note' => 'Tinjau pencairan saldo', 'count' => $pendingWithdrawal, 'bg' => '#fee2e2', 'ic' => '#b91c1c', 'ac' => '#ef4444', 'hb' => '#fff1f2', 'hbBorder' => '#fecdd3'],
                 ];
             @endphp
             <div style="display:flex;flex-direction:column;gap:.4rem;">

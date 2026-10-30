@@ -1,21 +1,44 @@
 <?php
+
 namespace App\Http\Controllers\Api\Admin;
+
 use App\Http\Controllers\Controller;
-use App\Support\AuditLogger;
-use Illuminate\Support\Facades\DB;
-class AdminSimpananController extends Controller {
-    public function index() { return response()->json(['data'=>DB::table('simpanans')->paginate()]); }
-    public function pending() { return response()->json(['data'=>DB::table('simpanans')->where('status','tidak_aktif')->get()]); }
-    public function approve($jenis,$id) {
-        $row = DB::table('simpanans')->where('id',$id)->first();
-        DB::table('simpanans')->where('id',$id)->update(['status'=>'aktif']);
-        AuditLogger::log('simpanan.approve', new \App\Models\Simpanan(['id'=>$id]), ['status'=>$row->status ?? null, 'jenis'=>$jenis], ['status'=>'aktif']);
-        return response()->json(['message'=>'Disetujui']);
+use App\Models\Simpanan;
+use App\Services\AdminApprovalService;
+use App\Services\AdminSimpananService;
+
+class AdminSimpananController extends Controller
+{
+    public function __construct(
+        private readonly AdminApprovalService $approvals,
+        private readonly AdminSimpananService $simpanan,
+    ) {}
+
+    public function index()
+    {
+        return response()->json(['data' => $this->simpanan->listing()]);
     }
-    public function reject($jenis,$id) {
-        $row = DB::table('simpanans')->where('id',$id)->first();
-        DB::table('simpanans')->where('id',$id)->update(['status'=>'ditolak']);
-        AuditLogger::log('simpanan.reject', new \App\Models\Simpanan(['id'=>$id]), ['status'=>$row->status ?? null, 'jenis'=>$jenis], ['status'=>'ditolak']);
-        return response()->json(['message'=>'Ditolak']);
+
+    public function pending()
+    {
+        return response()->json(['data' => $this->simpanan->pending()]);
+    }
+
+    public function approve($jenis, $id)
+    {
+        $row = Simpanan::findOrFail($id);
+        abort_unless($row->jenis === $jenis, 404);
+        abort_unless($this->approvals->approveSavings($row, $jenis), 409, 'Setoran sudah diproses atau pengunduran diri sedang diproses.');
+
+        return response()->json(['message' => 'Disetujui']);
+    }
+
+    public function reject($jenis, $id)
+    {
+        $row = Simpanan::findOrFail($id);
+        abort_unless($row->jenis === $jenis, 404);
+        abort_unless($this->approvals->rejectSavings($row, $jenis), 409, 'Setoran sudah diproses.');
+
+        return response()->json(['message' => 'Ditolak']);
     }
 }

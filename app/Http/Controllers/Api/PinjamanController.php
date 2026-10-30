@@ -3,15 +3,16 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Services\PinjamanService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 
 class PinjamanController extends Controller
 {
+    public function __construct(private readonly PinjamanService $pinjaman) {}
+
     public function index(Request $request)
     {
-        $loans = DB::table('pinjamen')->where('id_anggota', $request->user()->id)
-            ->orderByDesc('created_at')->get();
+        $loans = $this->pinjaman->forMember($request->user());
 
         return response()->json(['pinjaman' => $loans, 'data' => $loans]);
     }
@@ -24,14 +25,9 @@ class PinjamanController extends Controller
             'tenor' => 'required|integer|min:1|max:60',
             'keterangan' => 'nullable|string|max:1000',
         ]);
-        $data['id_anggota'] = $request->user()->id;
-        $data['sisa_pinjaman'] = $data['nominal'];
-        $data['angsuran'] = $data['nominal'] / $data['tenor'];
-        $data['status'] = 'pending'; // menunggu persetujuan admin
-        $data['keterangan'] = ($data['keterangan'] ?? null);
-        $id = DB::table('pinjamen')->insertGetId($data + ['created_at' => now(), 'updated_at' => now()]);
+        $id = $this->pinjaman->submit($request->user(), $data);
 
-        return response()->json(['message' => 'Pengajuan pinjaman berhasil dikirim.', 'id' => $id], 201);
+        return response()->json(['message' => 'Pengajuan pinjaman berhasil dikirim.', 'id' => $id, 'data' => ['id_pengajuan' => $id, 'status' => 'pending']], 201);
     }
 
     public function createPin(Request $request)
@@ -42,6 +38,7 @@ class PinjamanController extends Controller
     public function verifyPin(Request $request)
     {
         $request->validate(['pin' => 'required|string|size:6']);
+
         return response()->json(['valid' => true]);
     }
 
@@ -52,8 +49,8 @@ class PinjamanController extends Controller
 
     public function checkActive(Request $request)
     {
-        $loan = DB::table('pinjamen')->where('id_anggota', $request->user()->id)
-            ->where('status', 'aktif')->first();
+        $loan = $this->pinjaman->activeLoan($request->user());
+
         return response()->json(['active' => (bool) $loan, 'pinjaman' => $loan]);
     }
 }

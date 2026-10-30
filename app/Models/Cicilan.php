@@ -17,6 +17,14 @@ class Cicilan extends Model
         'status',
     ];
 
+    protected function casts(): array
+    {
+        return [
+            'tgl_tempo' => 'date',
+            'tgl_bayar' => 'date',
+        ];
+    }
+
     public function pinjaman()
     {
         return $this->belongsTo(Pinjaman::class, 'id_pinjaman');

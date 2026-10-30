@@ -40,7 +40,6 @@ class PendingApprovals
             ->where('status', 'tidak_aktif');
     }
 
-    /** Setoran simpanan wajib yang menunggu verifikasi. */
     public static function wajib(): Builder
     {
         return Simpanan::query()
@@ -65,15 +64,16 @@ class PendingApprovals
     /**
      * Jumlah tiap kategori pending + totalnya.
      *
-     * @return array{anggota: int, sukarela: int, pokok: int, pinjaman: int, pembayaran: int, total: int}
+     * @return array{anggota: int, sukarela: int, pokok: int, wajib: int, pinjaman: int, pembayaran: int, total: int}
      */
     public static function counts(): array
     {
         $counts = [
-            'anggota'    => static::anggota()->count(),
-            'sukarela'   => static::sukarela()->count(),
-            'pokok'      => static::pokok()->count(),
-            'pinjaman'   => static::pinjaman()->count(),
+            'anggota' => static::anggota()->count(),
+            'sukarela' => static::sukarela()->count(),
+            'pokok' => static::pokok()->count(),
+            'wajib' => static::wajib()->count(),
+            'pinjaman' => static::pinjaman()->count(),
             'pembayaran' => static::pembayaran()->count(),
         ];
 

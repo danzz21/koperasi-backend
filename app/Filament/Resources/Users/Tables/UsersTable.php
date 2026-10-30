@@ -3,7 +3,7 @@
 namespace App\Filament\Resources\Users\Tables;
 
 use App\Models\User;
-use App\Support\MemberAccountActions;
+use App\Services\MemberAccountActions;
 use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
@@ -11,7 +11,6 @@ use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
 use Filament\Notifications\Notification;
-use Filament\Tables\Columns\BadgeColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
@@ -22,35 +21,30 @@ class UsersTable
     {
         return $table
             ->columns([
+                // NO (row number)
+                TextColumn::make('index')
+                    ->label('No')
+                    ->rowIndex()
+                    ->width('50px')
+                    ->alignCenter(),
+
+                // NAMA ANGGOTA
                 TextColumn::make('nama_lengkap')
-                    ->label('Nama Lengkap')
+                    ->label('Nama Anggota')
                     ->searchable()
                     ->sortable()
                     ->weight('bold')
                     ->description(fn ($record): string => $record->username ?? ''),
 
-                TextColumn::make('email')
-                    ->label('Email')
+                // NO. KTP
+                TextColumn::make('nomor_ktp')
+                    ->label('No. KTP')
                     ->searchable()
-                    ->icon('heroicon-m-envelope')
-                    ->iconColor('gray')
-                    ->copyable(),
+                    ->fontFamily('mono')
+                    ->copyable()
+                    ->copyMessage('No. KTP disalin'),
 
-                TextColumn::make('nomor_hp')
-                    ->label('No. HP')
-                    ->searchable()
-                    ->icon('heroicon-m-phone')
-                    ->iconColor('gray'),
-
-                TextColumn::make('role')
-                    ->label('Role')
-                    ->badge()
-                    ->color(fn (string $state): string => match ($state) {
-                        'admin'    => 'primary',
-                        'anggota'  => 'info',
-                        default    => 'gray',
-                    }),
-
+                // STATUS badge
                 TextColumn::make('status')
                     ->label('Status')
                     ->badge()
@@ -59,20 +53,20 @@ class UsersTable
                         'pending'  => 'warning',
                         'nonaktif' => 'danger',
                         default    => 'gray',
-                    }),
+                    })
+                    ->formatStateUsing(fn (string $state): string => ucfirst($state))
+                    ->alignCenter(),
 
+                // TGL DAFTAR
                 TextColumn::make('created_at')
                     ->label('Tgl Daftar')
                     ->date('d M Y')
                     ->sortable()
-                    ->icon('heroicon-m-calendar-days')
-                    ->iconColor('gray'),
+                    ->alignCenter(),
             ])
             ->defaultSort('created_at', 'desc')
+            ->searchPlaceholder('Cari nama, No. KTP, No. Anggota...')
             ->filters([
-                SelectFilter::make('role')
-                    ->label('Role')
-                    ->options(['admin' => 'Admin', 'anggota' => 'Anggota']),
                 SelectFilter::make('status')
                     ->label('Status')
                     ->options([
@@ -82,68 +76,64 @@ class UsersTable
                     ]),
             ])
             ->recordActions([
-                ViewAction::make()
-                    ->label('Detail')
-                    ->icon('heroicon-m-eye'),
-
                 EditAction::make()
-                    ->label('Edit')
-                    ->icon('heroicon-m-pencil-square'),
-
-                Action::make('resetPassword')
-                    ->label('Reset Password')
-                    ->icon('heroicon-m-key')
-                    ->color('warning')
-                    ->requiresConfirmation()
-                    ->modalHeading('Reset password anggota?')
-                    ->modalDescription('Password diubah ke "'.MemberAccountActions::DEFAULT_PASSWORD.'" dan anggota harus login ulang di semua perangkat.')
-                    ->modalSubmitActionLabel('Ya, reset')
-                    ->action(function (User $record): void {
-                        MemberAccountActions::resetPassword($record);
-
-                        Notification::make()
-                            ->warning()
-                            ->title('Password direset')
-                            ->body('Password '.$record->nama_lengkap.' sekarang "'.MemberAccountActions::DEFAULT_PASSWORD.'". '
-                                .'Minta anggota segera menggantinya.')
-                            ->send();
-                    }),
-
-                Action::make('nonaktifkan')
-                    ->label('Nonaktifkan')
-                    ->icon('heroicon-m-no-symbol')
-                    ->color('danger')
-                    ->requiresConfirmation()
-                    ->modalHeading('Nonaktifkan anggota ini?')
-                    ->modalDescription('Anggota tidak bisa login sampai diaktifkan kembali.')
-                    ->visible(fn (User $record): bool => $record->status === 'aktif')
-                    ->action(function (User $record): void {
-                        MemberAccountActions::setActive($record, false);
-
-                        Notification::make()->danger()->title('Akun dinonaktifkan')->send();
-                    }),
-
-                Action::make('aktifkan')
-                    ->label('Aktifkan')
-                    ->icon('heroicon-m-check-circle')
-                    ->color('success')
-                    ->requiresConfirmation()
-                    ->modalHeading('Aktifkan anggota ini?')
-                    ->visible(fn (User $record): bool => $record->status !== 'aktif')
-                    ->action(function (User $record): void {
-                        MemberAccountActions::setActive($record, true);
-
-                        Notification::make()->success()->title('Akun diaktifkan')->send();
-                    }),
+                    ->label('')
+                    ->icon('heroicon-m-pencil-square')
+                    ->color('info')
+                    ->tooltip('Edit'),
 
                 DeleteAction::make()
-                    ->label('Hapus')
+                    ->label('')
+                    ->icon('heroicon-m-trash')
+                    ->color('danger')
+                    ->tooltip('Hapus')
                     ->modalHeading('Hapus anggota ini?')
                     ->modalDescription('Data anggota, simpanan, pinjaman, dan e-wallet-nya ikut terhapus. Tindakan ini tidak dapat dibatalkan.')
                     ->action(function (User $record): void {
                         MemberAccountActions::delete($record);
-
                         Notification::make()->success()->title('Anggota dihapus')->send();
+                    }),
+
+                ViewAction::make()
+                    ->label('')
+                    ->icon('heroicon-m-eye')
+                    ->color('success')
+                    ->tooltip('Detail'),
+
+                Action::make('resetPassword')
+                    ->label('')
+                    ->icon('heroicon-m-key')
+                    ->color('warning')
+                    ->tooltip('Reset Password')
+                    ->requiresConfirmation()
+                    ->modalHeading('Reset password anggota?')
+                    ->modalDescription('Password diubah ke "'.MemberAccountActions::DEFAULT_PASSWORD.'" dan anggota harus login ulang.')
+                    ->modalSubmitActionLabel('Ya, reset')
+                    ->action(function (User $record): void {
+                        MemberAccountActions::resetPassword($record);
+                        Notification::make()->warning()->title('Password direset')
+                            ->body('Password '.$record->nama_lengkap.' sekarang "'.MemberAccountActions::DEFAULT_PASSWORD.'".')
+                            ->send();
+                    }),
+
+                Action::make('toggleStatus')
+                    ->label('')
+                    ->icon(fn (User $record): string => $record->status === 'aktif'
+                        ? 'heroicon-m-no-symbol'
+                        : 'heroicon-m-check-circle')
+                    ->color(fn (User $record): string => $record->status === 'aktif' ? 'danger' : 'success')
+                    ->tooltip(fn (User $record): string => $record->status === 'aktif' ? 'Nonaktifkan' : 'Aktifkan')
+                    ->requiresConfirmation()
+                    ->modalHeading(fn (User $record): string => $record->status === 'aktif'
+                        ? 'Nonaktifkan anggota ini?'
+                        : 'Aktifkan anggota ini?')
+                    ->action(function (User $record): void {
+                        $active = $record->status !== 'aktif';
+                        MemberAccountActions::setActive($record, $active);
+                        Notification::make()
+                            ->when($active, fn ($n) => $n->success()->title('Akun diaktifkan'))
+                            ->when(!$active, fn ($n) => $n->danger()->title('Akun dinonaktifkan'))
+                            ->send();
                     }),
             ])
             ->toolbarActions([
@@ -151,7 +141,7 @@ class UsersTable
                     DeleteBulkAction::make(),
                 ]),
             ])
-            ->striped()
+            ->striped(false)
             ->paginated([10, 25, 50]);
     }
 }

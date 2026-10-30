@@ -1,21 +1,42 @@
 <?php
+
 namespace App\Http\Controllers\Api\Admin;
+
 use App\Http\Controllers\Controller;
-use App\Support\AuditLogger;
-use Illuminate\Support\Facades\DB;
-class AdminPaymentController extends Controller {
-    public function index() { return response()->json(['data'=>DB::table('payment_gateway_transaksi')->paginate()]); }
-    public function pendingCicilan() { return response()->json(['data'=>DB::table('pembayarans')->where('status','pending')->get()]); }
-    public function verifikasi($id) {
-        $row = DB::table('pembayarans')->where('id',$id)->first();
-        DB::table('pembayarans')->where('id',$id)->update(['status'=>'diverifikasi','tgl_pembayaran'=>now()]);
-        AuditLogger::log('pembayaran.verifikasi', new \App\Models\Pembayaran(['id'=>$id]), ['status'=>$row->status ?? null], ['status'=>'diverifikasi']);
-        return response()->json(['message'=>'Pembayaran diverifikasi']);
+use App\Models\Pembayaran;
+use App\Services\AdminApprovalService;
+use App\Services\AdminPaymentService;
+
+class AdminPaymentController extends Controller
+{
+    public function __construct(
+        private readonly AdminApprovalService $approvals,
+        private readonly AdminPaymentService $payments,
+    ) {}
+
+    public function index()
+    {
+        return response()->json(['data' => $this->payments->listing()]);
     }
-    public function tolak($id) {
-        $row = DB::table('pembayarans')->where('id',$id)->first();
-        DB::table('pembayarans')->where('id',$id)->update(['status'=>'gagal']);
-        AuditLogger::log('pembayaran.tolak', new \App\Models\Pembayaran(['id'=>$id]), ['status'=>$row->status ?? null], ['status'=>'gagal']);
-        return response()->json(['message'=>'Pembayaran ditolak']);
+
+    public function pendingCicilan()
+    {
+        return response()->json(['data' => $this->payments->pendingInstallments()]);
+    }
+
+    public function verifikasi($id)
+    {
+        $payment = Pembayaran::findOrFail($id);
+        abort_unless($this->approvals->approvePayment($payment), 409, 'Pembayaran sudah diproses.');
+
+        return response()->json(['message' => 'Pembayaran diverifikasi']);
+    }
+
+    public function tolak($id)
+    {
+        $payment = Pembayaran::findOrFail($id);
+        abort_unless($this->approvals->rejectPayment($payment), 409, 'Pembayaran sudah diproses.');
+
+        return response()->json(['message' => 'Pembayaran ditolak']);
     }
 }

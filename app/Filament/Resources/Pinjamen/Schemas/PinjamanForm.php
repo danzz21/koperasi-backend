@@ -4,8 +4,8 @@ namespace App\Filament\Resources\Pinjamen\Schemas;
 
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
-use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Schema;
 
 class PinjamanForm
@@ -48,8 +48,14 @@ class PinjamanForm
                     ->numeric()
                     ->default(0),
                 Select::make('status')
-                    ->options(['aktif' => 'Aktif', 'lunas' => 'Lunas', 'ditolak' => 'Ditolak'])
-                    ->default('aktif')
+                    ->options([
+                        'pending' => 'Menunggu Persetujuan',
+                        'disetujui' => 'Disetujui, menunggu pencairan',
+                        'aktif' => 'Aktif',
+                        'lunas' => 'Lunas',
+                        'ditolak' => 'Ditolak',
+                    ])
+                    ->default('pending')
                     ->required(),
                 DatePicker::make('tgl_persetujuan'),
                 DatePicker::make('tgl_cair'),

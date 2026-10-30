@@ -658,3 +658,70 @@
     vertical-align: middle !important;
 }
 
+
+/* ============================================================
+   25. FILAMENT v3 TABLE — Exact class overrides
+   ============================================================ */
+
+/* Table wrapper card */
+.fi-ta { border-radius: 1rem !important; overflow: hidden !important; }
+
+/* Toolbar (search + filter bar area) */
+.fi-ta > div:first-child {
+    background: #f0fdf4 !important;
+    border-bottom: 1px solid #d1fae5 !important;
+}
+
+/* Header row (th cells) */
+thead tr th,
+.fi-ta thead th {
+    background-color: #065f46 !important;
+    color: #ffffff !important;
+    font-weight: 700 !important;
+    font-size: .72rem !important;
+    letter-spacing: .07em !important;
+    text-transform: uppercase !important;
+    padding: .8rem 1rem !important;
+    border-bottom: 2px solid #047857 !important;
+    white-space: nowrap !important;
+}
+
+thead tr th * { color: #ffffff !important; }
+thead tr th svg { color: rgba(167,243,208,.8) !important; }
+thead tr th button:hover svg { color: #ffffff !important; }
+
+/* Body rows */
+tbody tr td {
+    padding: .7rem 1rem !important;
+    font-size: .82rem !important;
+    color: #374151 !important;
+    border-bottom: 1px solid #f3f4f6 !important;
+}
+tbody tr:hover td { background-color: #f0fdf4 !important; }
+tbody tr:last-child td { border-bottom: none !important; }
+
+/* Alternating rows (pengganti striped) */
+tbody tr:nth-child(even) td { background-color: #f9fafb; }
+tbody tr:nth-child(even):hover td { background-color: #f0fdf4 !important; }
+
+/* Row action buttons — compact icon only */
+.fi-ta-row-actions { display: flex; align-items: center; gap: .3rem; }
+.fi-ta-row-actions .fi-btn {
+    padding: .3rem !important;
+    border-radius: .45rem !important;
+    min-height: unset !important;
+    width: 30px !important;
+    height: 30px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+.fi-ta-row-actions .fi-btn svg { width: .95rem !important; height: .95rem !important; }
+
+/* Pagination */
+nav[aria-label="Pagination"],
+.fi-pagination {
+    padding: .75rem 1rem !important;
+    border-top: 1px solid #d1fae5 !important;
+    background: #f9fafb !important;
+}

@@ -64,3 +64,23 @@ If you discover a security vulnerability within Laravel, please send an e-mail t
 ## License
 
 The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+
+## API architecture
+
+API endpoints follow this request flow:
+
+`Route -> API Controller -> app/Services -> Model/database`
+
+Controllers own HTTP concerns such as request validation, status codes, and JSON
+responses. Business rules and data access for API workflows belong in
+`app/Services`; reusable persistence behavior remains in the models.
+Legacy `App\Support` service names remain as thin compatibility wrappers for
+existing callers while the implementations live in `app/Services`.
+
+For example, member registration is validated by `AuthController`, processed by
+`AuthService`, and persisted as a pending member through the `User` model.
+Authentication follows the same flow: `AuthService` looks up the account,
+checks its password and status, then issues a Sanctum token.
+
+This repository contains the Laravel backend only. Frontend hooks and API
+services must be maintained in the separate frontend project.

@@ -3,14 +3,14 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\User;
-use App\Support\AuthUserPayload;
+use App\Services\ProfilService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 
 class ProfilController extends Controller
 {
+    public function __construct(private readonly ProfilService $profil) {}
+
     /**
      * GET /api/anggota/profil
      */
@@ -18,25 +18,7 @@ class ProfilController extends Controller
     {
         $user = $request->user();
 
-        return response()->json([
-            'data' => [
-                'id' => $user->id,
-                'nama_lengkap' => $user->nama_lengkap,
-                'nomor_anggota' => $user->username, // bisa di-generate jika ada kolom nomor_anggota
-                'email' => $user->email,
-                'no_ktp' => $user->nomor_ktp,
-                'jenis_kelamin' => $user->jenis_kelamin,
-                'tgl_lahir' => $user->tgl_lahir ?? null,
-                'pekerjaan' => $user->pekerjaan,
-                'no_hp' => $user->nomor_hp,
-                'alamat' => $user->alamat,
-                'no_rek' => $user->no_rek,
-                'atasnama_rekening' => $user->atasnama_rekening,
-                'jenis_bank' => $user->jenis_bank,
-                'status' => $user->status,
-                'tgl_bergabung' => $user->created_at,
-            ]
-        ]);
+        return response()->json(['data' => $this->profil->forMember($user)]);
     }
 
     /**
@@ -67,12 +49,12 @@ class ProfilController extends Controller
             'tgl_lahir.before' => 'Tanggal lahir tidak boleh di masa depan.',
         ]);
 
-        $user->update($validated);
+        $result = $this->profil->update($user, $validated);
 
         return response()->json([
             'message' => 'Profil berhasil diperbarui',
-            'data'    => $user->fresh(),
-            'user'    => AuthUserPayload::for($user->fresh()),
+            'data' => $result['data'],
+            'user' => $result['user'],
         ]);
     }
 
@@ -84,12 +66,7 @@ class ProfilController extends Controller
         $request->validate(['foto' => 'required|image|max:2048']);
         $user = $request->user();
 
-        if ($request->hasFile('foto')) {
-            $file = $request->file('foto');
-            $filename = time() . '_' . $file->getClientOriginalName();
-            $file->storeAs('public/profile', $filename);
-            $user->update(['foto' => $filename]);
-        }
+        $this->profil->updatePhoto($user, $request->file('foto'));
 
         return response()->json(['message' => 'Foto profil berhasil diperbarui']);
     }

@@ -112,4 +112,25 @@ class AuthEndpointsTest extends TestCase
             ->assertUnauthorized()
             ->assertJsonPath('message', 'Token Google tidak valid atau sudah kedaluwarsa.');
     }
+
+    public function test_registration_creates_pending_member_through_auth_service(): void
+    {
+        $this->postJson('/api/auth/register', [
+            'nama_lengkap' => 'Anggota Baru',
+            'email' => 'anggota-baru@example.test',
+            'username' => 'anggota_baru',
+            'password' => 'password123',
+            'password_confirmation' => 'password123',
+            'nomor_ktp' => '1234567890123456',
+            'nomor_hp' => '081234567890',
+        ])->assertCreated()
+            ->assertJsonPath('message', 'Pendaftaran berhasil! Menunggu verifikasi admin.')
+            ->assertJsonStructure(['user_id']);
+
+        $this->assertDatabaseHas('users', [
+            'username' => 'anggota_baru',
+            'role' => 'anggota',
+            'status' => 'pending',
+        ]);
+    }
 }

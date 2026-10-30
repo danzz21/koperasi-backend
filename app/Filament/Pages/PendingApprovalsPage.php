@@ -2,7 +2,7 @@
 
 namespace App\Filament\Pages;
 
-use App\Support\PendingApprovalActions;
+use App\Services\PendingApprovalActions;
 use Filament\Actions\Action;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;

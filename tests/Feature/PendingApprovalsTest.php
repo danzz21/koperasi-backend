@@ -30,12 +30,12 @@ class PendingApprovalsTest extends TestCase
     private function pendingAnggota(): User
     {
         return $this->anggota ??= User::factory()->create([
-            'role'          => 'anggota',
-            'status'        => 'pending',
+            'role' => 'anggota',
+            'status' => 'pending',
             'jenis_kelamin' => 'L',
-            'tgl_lahir'     => '1995-01-01',
-            'pekerjaan'     => 'Karyawan',
-            'alamat'        => 'Jl. Contoh No. 1',
+            'tgl_lahir' => '1995-01-01',
+            'pekerjaan' => 'Karyawan',
+            'alamat' => 'Jl. Contoh No. 1',
         ]);
     }
 
@@ -43,24 +43,24 @@ class PendingApprovalsTest extends TestCase
     {
         return Simpanan::create([
             'id_anggota' => $this->pendingAnggota()->id,
-            'jenis'     => $jenis,
-            'nominal'   => 250000,
-            'bunga'     => 0,
-            'status'    => 'tidak_aktif',
+            'jenis' => $jenis,
+            'nominal' => 250000,
+            'bunga' => 0,
+            'status' => 'tidak_aktif',
         ]);
     }
 
     private function pendingPinjaman(): Pinjaman
     {
         return Pinjaman::create([
-            'id_anggota'       => $this->pendingAnggota()->id,
-            'tipe'            => 'murabahah',
-            'nominal'         => 2000000,
-            'sisa_pinjaman'   => 2000000,
-            'tenor'           => 10,
+            'id_anggota' => $this->pendingAnggota()->id,
+            'tipe' => 'murabahah',
+            'nominal' => 2000000,
+            'sisa_pinjaman' => 2000000,
+            'tenor' => 10,
             'bunga_per_bulan' => 0,
-            'angsuran'        => 200000,
-            'status'          => 'pending',
+            'angsuran' => 200000,
+            'status' => 'pending',
         ]);
     }
 
@@ -70,12 +70,12 @@ class PendingApprovalsTest extends TestCase
         $counter++;
 
         return Pembayaran::create([
-            'id_anggota'   => $this->pendingAnggota()->id,
+            'id_anggota' => $this->pendingAnggota()->id,
             'no_referensi' => 'CIC-TEST-'.uniqid().'-'.$counter,
-            'jenis'        => 'cicilan',
-            'nominal'      => 200000,
-            'metode'       => 'transfer',
-            'status'       => 'pending',
+            'jenis' => 'cicilan',
+            'nominal' => 200000,
+            'metode' => 'transfer',
+            'status' => 'pending',
         ]);
     }
 
@@ -92,6 +92,7 @@ class PendingApprovalsTest extends TestCase
         $this->assertSame(1, $counts['anggota']);
         $this->assertSame(1, $counts['sukarela']);
         $this->assertSame(1, $counts['pokok']);
+        $this->assertSame(0, $counts['wajib']);
         $this->assertSame(1, $counts['pinjaman']);
         $this->assertSame(1, $counts['pembayaran']);
         $this->assertSame(5, $counts['total']);
@@ -145,9 +146,13 @@ class PendingApprovalsTest extends TestCase
 
         $this->assertTrue(PendingApprovalActions::approve(PendingApprovalActions::PINJAMAN, $pinjaman));
         $fresh = $pinjaman->fresh();
-        $this->assertSame('aktif', $fresh->status);
+        $this->assertSame('disetujui', $fresh->status);
         $this->assertNotNull($fresh->tgl_persetujuan);
-        $this->assertNotNull($fresh->tgl_cair);
+        $this->assertNull($fresh->tgl_cair);
+        $this->assertSame(10, $fresh->cicilans()->count());
+        $this->assertTrue(PendingApprovalActions::disbursePinjaman($fresh));
+        $this->assertSame('aktif', $fresh->fresh()->status);
+        $this->assertNotNull($fresh->fresh()->tgl_cair);
 
         $lain = $this->pendingPinjaman();
         PendingApprovalActions::reject(PendingApprovalActions::PINJAMAN, $lain);

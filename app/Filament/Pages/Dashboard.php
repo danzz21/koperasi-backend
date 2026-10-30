@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\DB;
 class Dashboard extends BaseDashboard
 {
     protected static ?string $navigationLabel = 'Dashboard Utama';
+
     protected static ?int $navigationSort = -2;
 
     public function getView(): string
@@ -20,11 +21,11 @@ class Dashboard extends BaseDashboard
     {
         // --- Simpanan ---
         $simpananRows = DB::table('simpanans')->where('status', 'aktif')
-            ->selectRaw("COALESCE(SUM(nominal),0) AS total")
+            ->selectRaw('COALESCE(SUM(nominal),0) AS total')
             ->first();
 
-        $totalSimpanan   = (float) ($simpananRows->total ?? 0);
-        $kasReal         = $totalSimpanan * 0.8;
+        $totalSimpanan = (float) ($simpananRows->total ?? 0);
+        $kasReal = $totalSimpanan * 0.8;
 
         // --- Pinjaman ---
         $pinjamanRow = DB::table('pinjamen')->where('status', 'aktif')
@@ -33,11 +34,11 @@ class Dashboard extends BaseDashboard
             ->selectRaw('COALESCE(SUM(angsuran),0) AS angsuran_total')
             ->first();
 
-        $sisaPokok       = (float) ($pinjamanRow->sisa ?? 0);
+        $sisaPokok = (float) ($pinjamanRow->sisa ?? 0);
         $realisasiMargin = (float) ($pinjamanRow->nominal ?? 0) * 0.10;
-        $potensiMargin   = $sisaPokok * 0.10;
-        $shuBerjalan     = (float) ($pinjamanRow->angsuran_total ?? 0) * 0.12;
-        $totalAset       = $kasReal + $sisaPokok;
+        $potensiMargin = $sisaPokok * 0.10;
+        $shuBerjalan = (float) ($pinjamanRow->angsuran_total ?? 0) * 0.12;
+        $totalAset = $kasReal + $sisaPokok;
 
         // --- Pembayaran ---
         $pemasukanOpr = (float) DB::table('pembayarans')
@@ -60,20 +61,22 @@ class Dashboard extends BaseDashboard
         // --- Pending (sumber tunggal, sama dengan halaman detail pending) ---
         $pending = PendingApprovals::counts();
 
-        $pendingAnggota  = $pending['anggota'];
+        $pendingAnggota = $pending['anggota'];
         $pendingSukarela = $pending['sukarela'];
-        $pendingPokok    = $pending['pokok'];
+        $pendingPokok = $pending['pokok'];
+        $pendingWajib = $pending['wajib'];
         $pendingPinjaman = $pending['pinjaman'];
-        $pendingBayar    = $pending['pembayaran'];
-        $totalPending    = $pending['total'];
+        $pendingBayar = $pending['pembayaran'];
+        $totalPending = $pending['total'];
+        $pendingWithdrawal = DB::table('withdrawal_requests')->where('status', 'pending')->count();
 
         // --- Chart ---
-        $chartLabels     = [];
-        $chartSimpanan   = [];
+        $chartLabels = [];
+        $chartSimpanan = [];
         $chartPembiayaan = [];
         for ($i = 11; $i >= 0; $i--) {
-            $date            = now()->startOfMonth()->subMonths($i);
-            $chartLabels[]   = $date->translatedFormat('M');
+            $date = now()->startOfMonth()->subMonths($i);
+            $chartLabels[] = $date->translatedFormat('M');
             $chartSimpanan[] = (float) DB::table('simpanans')
                 ->whereYear('created_at', $date->year)
                 ->whereMonth('created_at', $date->month)
@@ -85,28 +88,30 @@ class Dashboard extends BaseDashboard
         }
 
         return [
-            'kasReal'          => $kasReal,
-            'shuBerjalan'      => $shuBerjalan,
-            'totalAset'        => $totalAset,
-            'totalSimpanan'    => $totalSimpanan,
-            'sisaPokok'        => $sisaPokok,
-            'realisasiMargin'  => $realisasiMargin,
-            'pemasukanOpr'     => $pemasukanOpr,
-            'bebanOpr'         => 200000,
-            'tagihanBulanIni'  => $tagihanBulanIni,
-            'potensiMargin'    => $potensiMargin,
-            'totalAnggota'     => $totalAnggota,
-            'rasio'            => $rasio,
-            'filterLabel'      => 'Tahun Ini (' . now()->year . ')',
-            'pendingAnggota'   => $pendingAnggota,
-            'pendingSukarela'  => $pendingSukarela,
-            'pendingPokok'     => $pendingPokok,
-            'pendingPinjaman'  => $pendingPinjaman,
-            'pendingBayar'     => $pendingBayar,
-            'totalPending'     => $pendingAnggota + $pendingSukarela + $pendingPokok + $pendingPinjaman + $pendingBayar,
-            'chartLabels'      => json_encode($chartLabels),
-            'chartSimpanan'    => json_encode($chartSimpanan),
-            'chartPembiayaan'  => json_encode($chartPembiayaan),
+            'kasReal' => $kasReal,
+            'shuBerjalan' => $shuBerjalan,
+            'totalAset' => $totalAset,
+            'totalSimpanan' => $totalSimpanan,
+            'sisaPokok' => $sisaPokok,
+            'realisasiMargin' => $realisasiMargin,
+            'pemasukanOpr' => $pemasukanOpr,
+            'bebanOpr' => 200000,
+            'tagihanBulanIni' => $tagihanBulanIni,
+            'potensiMargin' => $potensiMargin,
+            'totalAnggota' => $totalAnggota,
+            'rasio' => $rasio,
+            'filterLabel' => 'Tahun Ini ('.now()->year.')',
+            'pendingAnggota' => $pendingAnggota,
+            'pendingSukarela' => $pendingSukarela,
+            'pendingPokok' => $pendingPokok,
+            'pendingWajib' => $pendingWajib,
+            'pendingPinjaman' => $pendingPinjaman,
+            'pendingBayar' => $pendingBayar,
+            'pendingWithdrawal' => $pendingWithdrawal,
+            'totalPending' => $pendingAnggota + $pendingSukarela + $pendingPokok + $pendingWajib + $pendingPinjaman + $pendingBayar + $pendingWithdrawal,
+            'chartLabels' => json_encode($chartLabels),
+            'chartSimpanan' => json_encode($chartSimpanan),
+            'chartPembiayaan' => json_encode($chartPembiayaan),
         ];
     }
 }

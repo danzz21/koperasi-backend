@@ -3,7 +3,7 @@
 namespace App\Filament\Resources\Users\Schemas;
 
 use App\Models\User;
-use App\Support\MemberAccountActions;
+use App\Services\MemberAccountActions;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Select;

@@ -2,9 +2,13 @@
 
 namespace App\Filament\Resources\Pinjamen\Tables;
 
+use App\Models\Pinjaman;
+use App\Services\PendingApprovalActions;
+use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
+use Filament\Notifications\Notification;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
@@ -26,10 +30,10 @@ class PinjamenTable
                     ->label('Jenis Akad')
                     ->badge()
                     ->color(fn (string $state): string => match ($state) {
-                        'qard'       => 'info',
-                        'murabahah'  => 'primary',
+                        'qard' => 'info',
+                        'murabahah' => 'primary',
                         'mudharabah' => 'warning',
-                        default      => 'gray',
+                        default => 'gray',
                     }),
 
                 TextColumn::make('nominal')
@@ -59,10 +63,10 @@ class PinjamenTable
                     ->label('Status')
                     ->badge()
                     ->color(fn (string $state): string => match ($state) {
-                        'aktif'   => 'success',
-                        'lunas'   => 'gray',
+                        'aktif' => 'success',
+                        'lunas' => 'gray',
                         'ditolak' => 'danger',
-                        default   => 'warning',
+                        default => 'warning',
                     }),
 
                 TextColumn::make('tgl_cair')
@@ -88,19 +92,35 @@ class PinjamenTable
                 SelectFilter::make('tipe')
                     ->label('Jenis Akad')
                     ->options([
-                        'qard'       => 'Qard',
-                        'murabahah'  => 'Murabahah',
+                        'qard' => 'Qard',
+                        'murabahah' => 'Murabahah',
                         'mudharabah' => 'Mudharabah',
                     ]),
                 SelectFilter::make('status')
                     ->label('Status')
                     ->options([
-                        'aktif'   => 'Aktif',
-                        'lunas'   => 'Lunas',
+                        'pending' => 'Menunggu Persetujuan',
+                        'disetujui' => 'Disetujui, menunggu pencairan',
+                        'aktif' => 'Aktif',
+                        'disetujui' => 'Disetujui, menunggu pencairan',
+                        'pending' => 'Menunggu persetujuan',
+                        'lunas' => 'Lunas',
                         'ditolak' => 'Ditolak',
                     ]),
             ])
             ->recordActions([
+                Action::make('disburse')
+                    ->label('Catat Pencairan')
+                    ->color('success')
+                    ->requiresConfirmation()
+                    ->modalDescription('Konfirmasi hanya setelah dana benar-benar ditransfer kepada anggota.')
+                    ->visible(fn (Pinjaman $record): bool => $record->status === 'disetujui')
+                    ->action(function (Pinjaman $record): void {
+                        $success = PendingApprovalActions::disbursePinjaman($record);
+                        $notification = Notification::make()->title($success ? 'Pencairan dicatat' : 'Pencairan gagal');
+                        $success ? $notification->success() : $notification->danger();
+                        $notification->send();
+                    }),
                 EditAction::make()
                     ->label('Edit')
                     ->icon('heroicon-m-pencil-square'),

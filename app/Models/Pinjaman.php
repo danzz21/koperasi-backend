@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Pinjaman extends Model
 {
@@ -24,5 +25,10 @@ class Pinjaman extends Model
     public function anggota()
     {
         return $this->belongsTo(User::class, 'id_anggota');
+    }
+
+    public function cicilans(): HasMany
+    {
+        return $this->hasMany(Cicilan::class, 'id_pinjaman');
     }
 }

@@ -3,15 +3,14 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\User;
-use App\Support\AuthUserPayload;
+use App\Services\AuthService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
 {
+    public function __construct(private readonly AuthService $auth) {}
+
     /**
      * POST /api/auth/login
      */
@@ -26,35 +25,9 @@ class AuthController extends Controller
             return response()->json(['message' => 'Validasi gagal', 'errors' => $validator->errors()], 422);
         }
 
-        // Cari user by username atau email
-        $user = User::where('username', $request->username)
-                    ->orWhere('email', $request->username)
-                    ->first();
+        $result = $this->auth->login($request->username, $request->password);
 
-        if (! $user || ! Hash::check($request->password, $user->password)) {
-            return response()->json(['message' => 'Username atau password salah.'], 401);
-        }
-
-        if ($user->status === 'pending') {
-            return response()->json(['message' => 'Akun Anda belum diverifikasi oleh admin.'], 403);
-        }
-
-        // 'nonaktif' = akun dinonaktifkan oleh admin, 'rejected' = pendaftaran ditolak
-        if (in_array($user->status, ['nonaktif', 'rejected'], true)) {
-            return response()->json(['message' => 'Akun Anda dinonaktifkan oleh admin.'], 403);
-        }
-
-        // Revoke token lama
-        $user->tokens()->delete();
-
-        // Buat token baru
-        $token = $user->createToken('koperasi-token', [$user->role])->plainTextToken;
-
-        return response()->json([
-            'token'    => $token,
-            'token_type' => 'Bearer',
-            'user'     => AuthUserPayload::for($user->fresh()),
-        ]);
+        return response()->json($result['payload'], $result['status']);
     }
 
     /**
@@ -64,39 +37,24 @@ class AuthController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'nama_lengkap' => 'required|string|max:100',
-            'email'        => 'required|email|unique:users,email',
-            'username'     => 'required|string|unique:users,username|min:4|max:30',
-            'password'     => 'required|string|min:8|confirmed',
-            'nomor_ktp'    => 'required|string|size:16|unique:users,nomor_ktp',
-            'nomor_hp'     => 'required|string|max:15',
+            'email' => 'required|email|unique:users,email',
+            'username' => 'required|string|unique:users,username|min:4|max:30',
+            'password' => 'required|string|min:8|confirmed',
+            'nomor_ktp' => 'required|string|size:16|unique:users,nomor_ktp',
+            'nomor_hp' => 'required|string|max:15',
             'jenis_kelamin' => 'nullable|string|in:L,P',
-            'pekerjaan'    => 'nullable|string|max:100',
-            'alamat'       => 'nullable|string|max:500',
-            'no_rek'       => 'nullable|string|max:30',
+            'pekerjaan' => 'nullable|string|max:100',
+            'alamat' => 'nullable|string|max:500',
+            'no_rek' => 'nullable|string|max:30',
             'atasnama_rekening' => 'nullable|string|max:100',
-            'jenis_bank'   => 'nullable|string|max:50',
+            'jenis_bank' => 'nullable|string|max:50',
         ]);
 
         if ($validator->fails()) {
             return response()->json(['message' => 'Validasi gagal', 'errors' => $validator->errors()], 422);
         }
 
-        $user = User::create([
-            'nama_lengkap' => $request->nama_lengkap,
-            'email'        => $request->email,
-            'username'     => $request->username,
-            'password'     => Hash::make($request->password),
-            'nomor_ktp'    => $request->nomor_ktp,
-            'nomor_hp'     => $request->nomor_hp,
-            'jenis_kelamin' => $request->jenis_kelamin,
-            'pekerjaan'    => $request->pekerjaan,
-            'alamat'       => $request->alamat,
-            'no_rek'       => $request->no_rek,
-            'atasnama_rekening' => $request->atasnama_rekening,
-            'jenis_bank'   => $request->jenis_bank,
-            'role'         => 'anggota',
-            'status'       => 'pending',
-        ]);
+        $user = $this->auth->register($validator->validated());
 
         return response()->json([
             'message' => 'Pendaftaran berhasil! Menunggu verifikasi admin.',
@@ -109,7 +67,8 @@ class AuthController extends Controller
      */
     public function logout(Request $request)
     {
-        $request->user()->currentAccessToken()->delete();
+        $this->auth->logout($request->user());
+
         return response()->json(['message' => 'Logout berhasil.']);
     }
 
@@ -118,9 +77,7 @@ class AuthController extends Controller
      */
     public function me(Request $request)
     {
-        return response()->json([
-            'user' => AuthUserPayload::for($request->user()),
-        ]);
+        return response()->json($this->auth->currentUser($request->user()));
     }
 
     /**
